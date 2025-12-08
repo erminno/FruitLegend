@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport ottimizzato per mobile: no zoom, larghezza dispositivo, gestione notch -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Fruit Legend: Mobile Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --bg-dojo: #3e2723;
+            --ui-text: #fff;
+            --accent: #ffeb3b;
+            --accent-glow: #ffc107;
+            
+            /* Button Colors */
+            --btn-primary-top: #ff9100;
+            --btn-primary-bottom: #ff6f00;
+            --btn-primary-shadow: #bf360c;
+            
+            --btn-sec-top: #29b6f6;
+            --btn-sec-bottom: #0288d1;
+            --btn-sec-shadow: #01579b;
+            
+            --btn-danger-top: #ff4757;
+            --btn-danger-bottom: #c0392b;
+            --btn-danger-shadow: #a93226;
+
+            --bg-overlay: rgba(20, 10, 10, 0.90);
+            
+            --timer-color: #2ecc71;
+            --timer-critical: #ff4757;
+            
+            /* Ranks */
+            --rank-s: #ffd700;
+            --rank-a: #ff6b6b;
+            --rank-b: #48dbfb;
+            --rank-c: #1dd1a1;
+            --rank-none: #95a5a6;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: 'Fredoka One', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            height: 100dvh; /* Dynamic Viewport Height per mobile */
+            touch-action: none; /* Disabilita gesture del browser */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            background: radial-gradient(circle at center, #5d4037 0%, #2d1e1a 100%);
+            overflow: hidden;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.7);
+            transition: filter 0.1s, transform 0.1s, background 0.5s ease;
+        }
+
+        /* Damage/Splat Effects */
+        #game-container.damage-flash::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, transparent 50%, rgba(231, 76, 60, 0.6) 100%);
+            pointer-events: none;
+            z-index: 15;
+            animation: flashFade 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        #game-container.tomato-splat::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ff0055" opacity="0.6"/></svg>') no-repeat center center;
+            background-size: 150%;
+            pointer-events: none;
+            z-index: 16;
+            animation: splatFade 0.8s ease-out forwards;
+            mix-blend-mode: screen;
+            filter: drop-shadow(0 0 10px #ff0055);
+        }
+
+        #game-container.pear-flash::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(180, 255, 180, 0.4) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 15;
+            animation: flashFade 0.5s ease-out forwards;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes flashFade {
+            from { opacity: 1; transform: scale(1.05); }
+            to { opacity: 0; transform: scale(1); }
+        }
+        
+        @keyframes splatFade {
+            0% { opacity: 0.8; transform: scale(0.8); }
+            10% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0; transform: scale(1.5); }
+        }
+
+        /* Background variants */
+        #game-container.bg-default { background: radial-gradient(circle at center, #5d4037 0%, #2d1e1a 100%); }
+        #game-container.bg-dark { background: radial-gradient(circle at center, #34495e 0%, #1a252f 100%); }
+        #game-container.bg-light { background: radial-gradient(circle at center, #efebe9 0%, #a1887f 100%); }
+        #game-container.bg-midnight { background: radial-gradient(circle at center, #4b0082 0%, #1a0b2e 100%); }
+        #game-container.bg-sunset { background: radial-gradient(circle at center, #ff7e5f 0%, #feb47b 100%); }
+        #game-container.bg-forest { background: radial-gradient(circle at center, #2e7d32 0%, #1b5e20 100%); }
+        #game-container.bg-ocean { background: radial-gradient(circle at center, #0288d1 0%, #01579b 100%); }
+        #game-container.bg-volcano { background: radial-gradient(circle at center, #bf360c 0%, #3e2723 100%); }
+        #game-container.bg-ice { background: radial-gradient(circle at center, #b2ebf2 0%, #00bcd4 100%); }
+        #game-container.bg-desert { background: radial-gradient(circle at center, #ffcc80 0%, #e65100 100%); }
+        #game-container.bg-galaxy { background: radial-gradient(circle at center, #7b1fa2 0%, #000000 100%); }
+        
+        /* Arcade Mode Special Styles */
+        #game-container.mode-arcade #timer-display {
+            color: #ff9f43;
+            border-bottom-color: #e67e22;
+        }
+
+        /* Freeze Effect */
+        #freeze-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.1) 0%, rgba(0, 191, 255, 0.2) 100%);
+            box-shadow: inset 0 0 150px #00bfff;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 5;
+            mix-blend-mode: screen;
+            backdrop-filter: blur(2px);
+        }
+        
+        #game-container.frozen #freeze-overlay { opacity: 1; }
+
+        /* Grid Pattern */
+        #game-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: none;
+        }
+
+        /* HUD - Optimized for notch */
+        .hud {
+            position: absolute;
+            top: 20px; 
+            top: max(20px, env(safe-area-inset-top)); /* Notch support */
+            left: 20px; right: 20px;
+            left: max(20px, env(safe-area-inset-left));
+            right: max(20px, env(safe-area-inset-right));
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud > * { pointer-events: auto; }
+
+        .score-box {
+            font-size: 2.8rem;
+            color: var(--accent);
+            text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            text-align: right;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            min-width: 140px;
+            transform: skewX(-5deg);
+            position: relative;
+        }
+
+        /* Mobile Adjustments for Score Box */
+        @media (max-width: 600px) {
+            .score-box {
+                font-size: 2rem;
+                padding: 5px 15px;
+                min-width: 100px;
+            }
+            .timer-box {
+                font-size: 2.8rem;
+                padding: 5px 25px;
+            }
+        }
+        
+        /* FPS Counter Style */
+        #fps-counter {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
+            font-family: sans-serif;
+            letter-spacing: 1px;
+            transform: skewX(5deg);
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: -5px;
+            text-align: center;
+            opacity: 0.8;
+            transform: skewX(5deg);
+        }
+
+        .multiplier-badge {
+            position: absolute;
+            top: -10px; left: -10px;
+            background: #ff4757; color: #fff;
+            font-size: 1rem; padding: 5px 10px;
+            border-radius: 20px;
+            transform: rotate(-15deg) scale(0);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+            z-index: 20;
+        }
+        .score-box.active-2x .multiplier-badge {
+            transform: rotate(-15deg) scale(1);
+            animation: pulse2x 0.5s infinite alternate;
+        }
+        @keyframes pulse2x { from { transform: rotate(-15deg) scale(1); } to { transform: rotate(-15deg) scale(1.1); } }
+
+        .timer-box {
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.8rem;
+            color: var(--timer-color);
+            text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%);
+            padding: 5px 35px;
+            border-radius: 20px;
+            border-bottom: 4px solid rgba(0,0,0,0.5);
+            transition: color 0.3s, transform 0.2s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .timer-low {
+            color: var(--timer-critical);
+            animation: pulseCritical 0.8s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes pulseCritical {
+            0%, 100% { transform: translateX(-50%) scale(1); text-shadow: 0 0 10px var(--timer-critical); }
+            50% { transform: translateX(-50%) scale(1.1); text-shadow: 0 0 30px var(--timer-critical), 0 0 10px yellow; }
+        }
+
+        .home-btn {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #fff;
+            border-radius: 15px;
+            width: 55px; height: 55px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        .home-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+        .home-btn:active { transform: scale(0.95); }
+
+        /* OVERLAYS & MODALS */
+        .overlay {
+            position: absolute; inset: 0;
+            background: var(--bg-overlay);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 20;
+            transition: opacity 0.3s, backdrop-filter 0.3s;
+            backdrop-filter: blur(15px);
+            padding: 20px; 
+            padding-top: max(20px, env(safe-area-inset-top)); /* Notch safe */
+            box-sizing: border-box;
+            overflow-y: auto; 
+            scrollbar-width: thin;
+        }
+
+        .hidden { opacity: 0; pointer-events: none; }
+
+        .logo-container {
+            position: relative; margin-bottom: 40px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        h1 {
+            font-size: 5.5rem; line-height: 0.85;
+            color: transparent;
+            background: linear-gradient(180deg, #ffd700 20%, #ff8f00 80%);
+            -webkit-background-clip: text; background-clip: text;
+            margin: 0;
+            text-shadow: 0 10px 0 rgba(160, 60, 0, 0.5);
+            transform: rotate(-3deg); text-align: center;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 3.5rem; }
+            h1 span { font-size: 2.5rem !important; }
+        }
+
+        h1 span {
+            color: #fff; background: none;
+            -webkit-text-fill-color: #fff;
+            display: block; font-size: 3.2rem;
+            transform: rotate(3deg) translateX(15px);
+            text-shadow: 3px 3px 0 #e65100, 6px 6px 0 rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            background: linear-gradient(180deg, #fff 0%, #eee 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 25px; text-align: center;
+            filter: drop-shadow(0 4px 0 rgba(0,0,0,0.5));
+        }
+
+        .menu-buttons {
+            display: flex; flex-direction: column;
+            gap: 18px; width: 100%; max-width: 340px;
+            align-items: center;
+        }
+
+        .btn {
+            position: relative;
+            background: linear-gradient(180deg, var(--btn-primary-top) 0%, var(--btn-primary-bottom) 100%);
+            border: none; color: white;
+            padding: 16px 30px; font-size: 1.6rem;
+            border-radius: 20px; cursor: pointer;
+            font-family: 'Fredoka One', cursive;
+            transition: transform 0.1s;
+            box-shadow: 0 6px 0 var(--btn-primary-shadow), 0 15px 20px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+            width: 100%; text-transform: uppercase;
+            letter-spacing: 1px; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent; /* No blue tap box on mobile */
+        }
+        
+        .btn::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:active { transform: translateY(6px); box-shadow: 0 0 0 var(--btn-primary-shadow), inset 0 4px 8px rgba(0,0,0,0.2); }
+
+        .btn.secondary {
+            background: linear-gradient(180deg, var(--btn-sec-top) 0%, var(--btn-sec-bottom) 100%);
+            box-shadow: 0 6px 0 var(--btn-sec-shadow), 0 15px 20px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+            font-size: 1.2rem; padding: 14px 30px; width: 90%;
+        }
+        .btn.secondary:active { box-shadow: 0 0 0 var(--btn-sec-shadow), inset 0 4px 8px rgba(0,0,0,0.2); }
+
+        .btn.danger {
+            background: linear-gradient(180deg, var(--btn-danger-top) 0%, var(--btn-danger-bottom) 100%);
+            box-shadow: 0 6px 0 var(--btn-danger-shadow), 0 15px 20px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+            font-size: 1.2rem; padding: 14px 30px; width: 90%;
+        }
+        .btn.danger:active { box-shadow: 0 0 0 var(--btn-danger-shadow), inset 0 4px 8px rgba(0,0,0,0.2); }
+
+        .btn.compact {
+            width: auto; min-width: 120px; padding: 8px 20px;
+            font-size: 1rem; margin-top: 15px; border-radius: 12px;
+            box-shadow: 0 4px 0 var(--btn-sec-shadow), 0 10px 15px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+        }
+        .btn.compact:active { transform: translateY(4px); box-shadow: 0 0 0 var(--btn-sec-shadow), inset 0 2px 4px rgba(0,0,0,0.2); }
+
+        .btn-icon { margin-right: 12px; font-size: 1.2em; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.2)); }
+        
+        /* RULES IMPROVED */
+        .rules-wrapper {
+            max-height: 60vh; overflow-y: auto;
+            width: 100%; max-width: 500px;
+            padding-right: 5px; scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) rgba(0,0,0,0.1);
+        }
+        .rules-list {
+            text-align: left; background: rgba(0, 0, 0, 0.5);
+            padding: 25px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .rules-section-title {
+            color: var(--accent); font-size: 1.3rem; margin: 20px 0 10px 0;
+            border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 5px;
+        }
+        .rules-list li {
+            margin-bottom: 12px; font-size: 1rem; color: #eee;
+            display: flex; align-items: center; background: rgba(255,255,255,0.05);
+            padding: 8px 12px; border-radius: 10px;
+        }
+        .rules-list li span.icon {
+            font-size: 1.8rem; margin-right: 15px; min-width: 40px; text-align: center;
+        }
+        
+        /* Rank icons in rules */
+        .rules-list li span.icon.rank-icon-s {
+            color: var(--rank-s); border: 2px solid var(--rank-s); border-radius: 50%;
+            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; background: rgba(0,0,0,0.3);
+        }
+        .rules-list li span.icon.rank-icon-a {
+            color: var(--rank-a); border: 2px solid var(--rank-a); border-radius: 50%;
+            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; background: rgba(0,0,0,0.3);
+        }
+        .rules-list li span.icon.rank-icon-b {
+            color: var(--rank-b); border: 2px solid var(--rank-b); border-radius: 50%;
+            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; background: rgba(0,0,0,0.3);
+        }
+        .rules-list li span.icon.rank-icon-c {
+            color: var(--rank-c); border: 2px solid var(--rank-c); border-radius: 50%;
+            width: 35px; height: 35px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; background: rgba(0,0,0,0.3);
+        }
+
+        .rule-desc { display: flex; flex-direction: column; }
+        .rule-desc strong { color: #fff; font-size: 1.1rem; }
+        .rule-desc small { color: #aaa; font-size: 0.85rem; font-family: sans-serif; }
+
+        /* RANK BADGE */
+        .rank-badge {
+            font-size: 4rem; font-weight: bold; text-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            margin: 10px 0; width: 120px; height: 120px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0.5));
+            border: 6px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .rank-badge::after {
+            content: ''; position: absolute; top: 10%; left: 10%; width: 25%; height: 25%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .rank-S { color: var(--rank-s); border-color: var(--rank-s); box-shadow: 0 0 50px var(--rank-s); }
+        .rank-A { color: var(--rank-a); border-color: var(--rank-a); box-shadow: 0 0 40px var(--rank-a); }
+        .rank-B { color: var(--rank-b); border-color: var(--rank-b); box-shadow: 0 0 20px var(--rank-b); }
+        .rank-C { color: var(--rank-c); border-color: var(--rank-c); }
+        .rank-NONE { color: var(--rank-none); border-color: var(--rank-none); font-size: 2rem; }
+
+        /* SETTINGS & CUSTOMIZATION */
+        .settings-grid { display: grid; gap: 15px; width: 100%; max-width: 450px; }
+        .setting-panel {
+            background: rgba(0,0,0,0.3); padding: 15px;
+            border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .setting-label { display: block; color: #aaa; font-size: 0.9rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+        select {
+            width: 100%; padding: 12px; font-size: 1.1rem;
+            border-radius: 10px; border: 2px solid rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,0.1); color: #fff;
+            font-family: 'Fredoka One', cursive; cursor: pointer; outline: none;
+        }
+        select:focus { border-color: var(--accent); background-color: rgba(0,0,0,0.5); }
+        select option { background: #333; }
+        
+        /* Checkbox Style for Performance Mode */
+        input[type="checkbox"] {
+            width: 25px; height: 25px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .color-grid { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;}
+        .color-opt {
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2); cursor: pointer;
+            transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .color-opt:hover { transform: scale(1.1); }
+        .color-opt.selected { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .color-opt.selected::after {
+            content: '✔'; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); color: rgba(0,0,0,0.6); font-size: 1.2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 15px; width: 100%; max-width: 450px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            padding: 15px 10px; border-radius: 15px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-value { display: block; font-size: 1.6rem; color: var(--accent); margin-bottom: 5px; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .stat-name { font-size: 0.75rem; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* IMPROVED RANK CARDS */
+        .rank-card-container {
+            grid-column: span 2;
+            display: flex; gap: 15px;
+            margin-bottom: 10px;
+        }
+        .rank-card {
+            flex: 1;
+            background: rgba(0,0,0,0.4); 
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            position: relative; overflow: hidden;
+        }
+        .rank-card.max-rank { border-color: var(--accent); background: linear-gradient(135deg, rgba(255, 235, 59, 0.1), rgba(0,0,0,0.4)); }
+        
+        .rank-card-label { font-size: 0.7rem; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; z-index: 2;}
+        .rank-card-val { 
+            font-size: 3rem; font-weight: bold; z-index: 2;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        
+        .rank-card-bg-icon {
+            position: absolute; bottom: -10px; right: -10px;
+            font-size: 4rem; opacity: 0.1; transform: rotate(-15deg);
+            z-index: 1; pointer-events: none;
+        }
+
+        /* Game Over Layout */
+        .game-over-container {
+            width: 100%; max-width: 320px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="bg-default">
+        <div id="freeze-overlay"></div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="hud">
+            <button class="home-btn" id="game-home-btn" onclick="resetGame()">🏠</button>
+            <div class="timer-box" id="timer-display">60</div>
+            <div class="score-box" id="score-box-container">
+                <div class="multiplier-badge" id="mult-badge">2X</div>
+                <span class="score-label" id="score-label">PUNTI</span>
+                <span id="score-val" style="display:block; text-align: center;">0</span>
+                <div id="fps-counter">FPS: 60</div>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="overlay">
+            <div class="logo-container">
+                <h1>FRUIT<br><span>LEGEND</span></h1>
+            </div>
+            
+            <div class="menu-buttons">
+                <button class="btn" id="btn-play" onclick="initGame('classic')">
+                    <span class="btn-icon">⚔️</span> <span id="btn-text-play">GIOCA</span>
+                </button>
+                <button class="btn danger" id="btn-arcade" onclick="initGame('arcade')">
+                    <span class="btn-icon">💣</span> <span id="btn-text-arcade">ARCADE</span>
+                </button>
+                <button class="btn secondary" onclick="openProfile()">
+                    <span class="btn-icon">🏆</span> <span id="btn-text-profile">PROFILO</span>
+                </button>
+                <button class="btn secondary" id="btn-custom" onclick="openCustomize()">
+                    <span class="btn-icon">🎨</span> CUSTOM
+                </button>
+                <button class="btn secondary" id="btn-rules" onclick="openRules()">
+                    <span class="btn-icon">📜</span> REGOLE
+                </button>
+                <button class="btn secondary" id="btn-settings" onclick="openSettings()">
+                    <span class="btn-icon">⚙️</span> OPZIONI
+                </button>
+            </div>
+        </div>
+
+        <!-- Rules Screen -->
+        <div id="rules-screen" class="overlay hidden">
+            <h2 id="rules-title">REGOLE</h2>
+            <div class="rules-wrapper">
+                <div class="rules-list" id="rules-content">
+                    <!-- Content injected via JS -->
+                </div>
+            </div>
+            <button class="btn secondary compact" onclick="closeRules()" id="rules-close-btn">INDIETRO</button>
+        </div>
+
+        <!-- Profile Screen -->
+        <div id="profile-screen" class="overlay hidden">
+            <h2 id="profile-title">IL TUO PROFILO</h2>
+            <div class="stats-grid">
+                <!-- Rank Info Row Improved -->
+                <div class="rank-card-container">
+                    <div class="rank-card max-rank">
+                        <span class="rank-card-bg-icon">👑</span>
+                        <span class="rank-card-label" id="label-max-rank">Rango Max</span>
+                        <span class="rank-card-val" id="stat-max-rank" style="color:var(--rank-s)">-</span>
+                    </div>
+                    <div class="rank-card">
+                        <span class="rank-card-bg-icon">🕒</span>
+                        <span class="rank-card-label" id="label-last-rank">Ultimo Rango</span>
+                        <span class="rank-card-val" id="stat-last-rank" style="color:#fff">-</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-games">0</span>
+                    <span class="stat-name" id="label-games">Partite</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-best">0</span>
+                    <span class="stat-name" id="label-best">Record</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-total-score">0</span>
+                    <span class="stat-name" id="label-total">Punti Totali</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-max-combo">0</span>
+                    <span class="stat-name" id="label-combo">Max Combo</span>
+                </div>
+                <!-- NEW STAT: BOMBS -->
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-bombs-exploded">0</span>
+                    <span class="stat-name" id="label-bombs">Bombe Esplose</span>
+                </div>
+            </div>
+            <button class="btn secondary compact" onclick="closeProfile()" id="profile-close-btn">INDIETRO</button>
+        </div>
+
+        <!-- Customize Screen -->
+        <div id="customize-screen" class="overlay hidden">
+            <h2 id="cust-title">PERSONALIZZA</h2>
+            
+            <div class="settings-grid">
+                <div class="setting-panel">
+                    <span class="setting-label" id="cust-blade-label">Colore Lama</span>
+                    <div class="color-grid" id="blade-colors">
+                        <!-- Originals -->
+                        <div class="color-opt selected" style="background:#fff;" data-color="#fff"></div>
+                        <div class="color-opt" style="background:#e74c3c;" data-color="#e74c3c"></div>
+                        <div class="color-opt" style="background:#3498db;" data-color="#3498db"></div>
+                        <div class="color-opt" style="background:#2ecc71;" data-color="#2ecc71"></div>
+                        <div class="color-opt" style="background:#9b59b6;" data-color="#9b59b6"></div>
+                        <div class="color-opt" style="background:#f1c40f;" data-color="#f1c40f"></div>
+                        <div class="color-opt" style="background:#ff9ff3;" data-color="#ff9ff3"></div>
+                        <div class="color-opt" style="background:#00ffff;" data-color="#00ffff"></div>
+                        
+                        <!-- New 5 Colors -->
+                        <div class="color-opt" style="background:#ff5722;" data-color="#ff5722" title="Neon Orange"></div>
+                        <div class="color-opt" style="background:#76ff03;" data-color="#76ff03" title="Lime Green"></div>
+                        <div class="color-opt" style="background:#3d5afe;" data-color="#3d5afe" title="Indigo"></div>
+                        <div class="color-opt" style="background:#b0bec5;" data-color="#b0bec5" title="Silver"></div>
+                        <div class="color-opt" style="background:#ff00ff;" data-color="#ff00ff" title="Hot Pink"></div>
+                        
+                        <div class="color-opt" style="background:linear-gradient(45deg, red, yellow, blue);" data-color="rainbow"></div>
+                    </div>
+                </div>
+
+                <div class="setting-panel">
+                    <span class="setting-label" id="cust-bg-label">Sfondo Dojo</span>
+                    <div class="color-grid" id="bg-options">
+                        <!-- Originals -->
+                        <div class="color-opt selected" style="background:#5d4037;" onclick="setBg('default')"></div>
+                        <div class="color-opt" style="background:#2c3e50;" onclick="setBg('dark')"></div>
+                        <div class="color-opt" style="background:#d7ccc8;" onclick="setBg('light')"></div>
+                        <div class="color-opt" style="background:#1a0b2e;" onclick="setBg('midnight')"></div>
+                        <div class="color-opt" style="background:#ff7e5f;" onclick="setBg('sunset')"></div>
+                        <div class="color-opt" style="background:#2e7d32;" onclick="setBg('forest')"></div>
+                        
+                        <!-- New 5 Backgrounds -->
+                        <div class="color-opt" style="background:linear-gradient(135deg, #0288d1, #01579b);" onclick="setBg('ocean')" title="Ocean"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #bf360c, #3e2723);" onclick="setBg('volcano')" title="Volcano"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #b2ebf2, #00bcd4);" onclick="setBg('ice')" title="Ice"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #ffcc80, #e65100);" onclick="setBg('desert')" title="Desert"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #7b1fa2, #000000);" onclick="setBg('galaxy')" title="Galaxy"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn secondary compact" id="cust-close-btn" onclick="closeCustomize()">INDIETRO</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay hidden">
+            <div class="game-over-container">
+                <h1 style="color: #e74c3c; transform: rotate(5deg); font-size: 3.5rem; background: none; -webkit-text-fill-color: #ff4757; margin-bottom: 0;" id="game-over-title">TEMPO SCADUTO!</h1>
+                
+                <div id="rank-badge" class="rank-badge rank-B">B</div>
+                <p style="margin-top:0; color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;" id="rank-label">RANGO</p>
+
+                <div class="stat-card" style="margin: 15px 0; width: 100%; box-sizing: border-box;">
+                    <span class="stat-name" id="final-score-label-text">PUNTEGGIO FINALE</span>
+                    <span class="stat-value" id="final-score" style="font-size: 3rem;">0</span>
+                </div>
+                
+                <div id="best-score" style="color:#2ecc71; margin-bottom: 20px; font-size: 1.1rem;"></div>
+                
+                <div class="menu-buttons" style="width: 100%;">
+                    <button class="btn" id="game-over-retry-btn" onclick="resetGame()">MENU</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="overlay hidden">
+            <h2 id="settings-title">OPZIONI</h2>
+            <div class="settings-grid">
+                <div class="setting-panel">
+                    <span class="setting-label" id="settings-lang-label">Lingua</span>
+                    <select id="language-selector">
+                        <option value="it">Italiano</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <!-- Performance Mode Toggle -->
+                <div class="setting-panel">
+                    <span class="setting-label" id="settings-perf-label">Performance Mode</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                        <span style="color: #fff; font-size: 1rem; opacity: 0.8;" id="settings-perf-desc">No Splash/Testo</span>
+                        <input type="checkbox" id="perf-mode-check">
+                    </div>
+                </div>
+            </div>
+            <button class="btn secondary compact" id="settings-close-btn" onclick="closeSettings()">SALVA & ESCI</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOCALIZZAZIONE DEL TESTO ---
+        const localStrings = {
+            'it': {
+                TITLE: 'FRUIT LEGEND',
+                BUTTON_PLAY: 'GIOCA',
+                BUTTON_ARCADE: 'ARCADE',
+                BUTTON_PROFILE: 'PROFILO',
+                BUTTON_CUSTOM: 'CUSTOM',
+                BUTTON_RETRY: 'MENU',
+                BUTTON_SETTINGS: 'OPZIONI',
+                BUTTON_RULES: 'REGOLE',
+                SCORE_LABEL: 'PUNTI',
+                GAME_OVER: 'TEMPO SCADUTO!',
+                FINAL_SCORE_LABEL: 'PUNTEGGIO FINALE',
+                NEW_RECORD: 'NUOVO RECORD!',
+                RECORD: 'Migliore:',
+                RANK_LABEL: 'RANGO',
+                SETTINGS_TITLE: 'OPZIONI',
+                SETTINGS_PERF_LABEL: 'Modalità Performance',
+                SETTINGS_PERF_DESC: 'No Splash/Scritte (Max 16 Entità)',
+                LANGUAGE: 'Lingua:',
+                CLOSE: 'INDIETRO',
+                SAVE_CLOSE: 'SALVA & ESCI',
+                CUST_TITLE: 'PERSONALIZZA',
+                CUST_BLADE: 'Colore Lama',
+                CUST_BG: 'Sfondo Dojo',
+                PROFILE_TITLE: 'IL TUO PROFILO',
+                LABEL_GAMES: 'Partite',
+                LABEL_BEST: 'Record',
+                LABEL_TOTAL: 'Punti Totali',
+                LABEL_COMBO: 'Max Combo',
+                LABEL_MAX_RANK: 'Rango Max',
+                LABEL_LAST_RANK: 'Ultimo Rango',
+                LABEL_BOMBS: 'Bombe Esplose',
+                FREEZE_TEXT: "FREEZE!",
+                FRENZY_TEXT: "BLITZ!",
+                CRITICAL_TEXT: "CRITICO!",
+                DRAGON_TEXT: "DRAGO!",
+                RAINBOW_TEXT: "WOW!",
+                TIME_EXT: "+1 SEC",
+                TIME_ARCADE_BONUS: "+0.5 SEC", 
+                TIME_ARCADE_PENALTY: "-10 SEC",
+                MEGA_HIT: "COLPITO!",
+                LOADING: "Caricamento...",
+                BOMB_PENALTY: "-100 PT",
+                TIME_PENALTY: "-10 SEC",
+                RULES_TITLE: 'REGOLE DI GIOCO',
+                RULES_CONTENT: `
+                    <div class="rules-section-title">Base</div>
+                    <ul>
+                        <li><span class="icon">🍎</span> <div class="rule-desc"><strong>Taglia la frutta</strong><small>Usa il mouse o il dito per tagliare.</small></div></li>
+                        <li><span class="icon">⚔️</span> <div class="rule-desc"><strong>Combo</strong><small>Taglia 3 o più frutti insieme.</small></div></li>
+                        <li><span class="icon">💣</span> <div class="rule-desc"><strong>EVITA le Bombe</strong><small>Penalità: -10 secondi e -100 punti.</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">Modalità Arcade (Reverse)</div>
+                    <ul>
+                         <li><span class="icon">💣</span> <div class="rule-desc"><strong>TAGLIA LE BOMBE!</strong><small>Ti danno +0.5 secondo e punti.</small></div></li>
+                         <li><span class="icon">🚫</span> <div class="rule-desc"><strong>Evita la Frutta</strong><small>Ti toglie 10 secondi!</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">Nuovi Frutti</div>
+                    <ul>
+                        <li><span class="icon">🍈</span> <div class="rule-desc"><strong>Melone</strong><small>Esplosivo! Pulisce l'intero schermo.</small></div></li>
+                        <li><span class="icon">🍐</span> <div class="rule-desc"><strong>Pera</strong><small>Purifica! Distrugge tutte le bombe.</small></div></li>
+                        <li><span class="icon">🍹</span> <div class="rule-desc"><strong>Drink</strong><small>20 colpi! +10 Secondi extra.</small></div></li>
+                        <li><span class="icon">🍒</span> <div class="rule-desc"><strong>Bacche</strong><small>Piccole ma preziose. 20 punti.</small></div></li>
+                        <li><span class="icon">🍏</span> <div class="rule-desc"><strong>Mela D'oro</strong><small>Speciale! +5 secondi.</small></div></li>
+                        <li><span class="icon" style="text-shadow: 0 0 10px red;">🍅</span> <div class="rule-desc"><strong>Pomodoro Neon</strong><small>Splat! 150 punti ma macchia lo schermo.</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">Speciali</div>
+                    <ul>
+                        <li><span class="icon">🥑</span> <div class="rule-desc"><strong>Avocado</strong><small>+3 secondi. Raro come la stella.</small></div></li>
+                        <li><span class="icon">⭐</span> <div class="rule-desc"><strong>Stella Ninja</strong><small>Raddoppia (2X) tutti i punti per 6 secondi.</small></div></li>
+                        <li><span class="icon">❄️</span> <div class="rule-desc"><strong>Freeze</strong><small>Ferma il timer e rallenta la frutta.</small></div></li>
+                        <li><span class="icon">🐲</span> <div class="rule-desc"><strong>Frutto del Drago</strong><small>Molto raro e veloce. Vale 100 punti.</small></div></li>
+                    </ul>
+                `
+            },
+            'en': {
+                TITLE: 'FRUIT LEGEND',
+                BUTTON_PLAY: 'PLAY',
+                BUTTON_ARCADE: 'ARCADE',
+                BUTTON_PROFILE: 'PROFILE',
+                BUTTON_CUSTOM: 'CUSTOM',
+                BUTTON_RETRY: 'MENU',
+                BUTTON_SETTINGS: 'OPTIONS',
+                BUTTON_RULES: 'RULES',
+                SCORE_LABEL: 'SCORE',
+                GAME_OVER: 'TIME UP!',
+                FINAL_SCORE_LABEL: 'FINAL SCORE',
+                NEW_RECORD: 'NEW RECORD!',
+                RECORD: 'Best:',
+                RANK_LABEL: 'RANK',
+                SETTINGS_TITLE: 'OPTIONS',
+                SETTINGS_PERF_LABEL: 'Performance Mode',
+                SETTINGS_PERF_DESC: 'No Splash/Text (Max 16 Entities)',
+                LANGUAGE: 'Language',
+                CLOSE: 'BACK',
+                SAVE_CLOSE: 'SAVE & EXIT',
+                CUST_TITLE: 'CUSTOMIZE',
+                CUST_BLADE: 'Blade Color',
+                CUST_BG: 'Dojo Background',
+                PROFILE_TITLE: 'YOUR PROFILE',
+                LABEL_GAMES: 'Games',
+                LABEL_BEST: 'Best Score',
+                LABEL_TOTAL: 'Total Points',
+                LABEL_COMBO: 'Max Combo',
+                LABEL_MAX_RANK: 'Max Rank',
+                LABEL_LAST_RANK: 'Last Rank',
+                LABEL_BOMBS: 'Bombs Exploded',
+                FREEZE_TEXT: "FREEZE!",
+                FRENZY_TEXT: "BLITZ!",
+                CRITICAL_TEXT: "CRITICAL!",
+                DRAGON_TEXT: "DRAGON!",
+                RAINBOW_TEXT: "WOW!",
+                TIME_EXT: "+1 SEC",
+                TIME_ARCADE_BONUS: "+0.5 SEC", 
+                TIME_ARCADE_PENALTY: "-10 SEC",
+                MEGA_HIT: "HIT!",
+                LOADING: "Loading...",
+                BOMB_PENALTY: "-100 PTS",
+                TIME_PENALTY: "-10 SEC",
+                RULES_TITLE: 'GAME RULES',
+                RULES_CONTENT: `
+                    <div class="rules-section-title">Basics</div>
+                    <ul>
+                        <li><span class="icon">🍎</span> <div class="rule-desc"><strong>Slice Fruits</strong><small>Swipe to score.</small></div></li>
+                        <li><span class="icon">⚔️</span> <div class="rule-desc"><strong>Combos</strong><small>Slice 3+ fruits at once.</small></div></li>
+                        <li><span class="icon">💣</span> <div class="rule-desc"><strong>AVOID Bombs</strong><small>Penalty: -10 seconds and -100 points.</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">Arcade Mode (Reverse)</div>
+                    <ul>
+                         <li><span class="icon">💣</span> <div class="rule-desc"><strong>SLICE BOMBS!</strong><small>Gain +0.5 second and points.</small></div></li>
+                         <li><span class="icon">🚫</span> <div class="rule-desc"><strong>Avoid Fruits</strong><small>They remove 10 seconds!</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">New Fruits</div>
+                    <ul>
+                        <li><span class="icon">🍈</span> <div class="rule-desc"><strong>Melon</strong><small>Explosive! Clears the entire screen.</small></div></li>
+                        <li><span class="icon">🍐</span> <div class="rule-desc"><strong>Pear</strong><small>Purify! Destroys all bombs.</small></div></li>
+                        <li><span class="icon">🍹</span> <div class="rule-desc"><strong>Drink</strong><small>20 hits! +10 Secondi extra.</small></div></li>
+                        <li><span class="icon">🍒</span> <div class="rule-desc"><strong>Berries</strong><small>Small but valuable. 20 points.</small></div></li>
+                        <li><span class="icon">🍏</span> <div class="rule-desc"><strong>Gold Apple</strong><small>Special! +5 seconds.</small></div></li>
+                        <li><span class="icon" style="text-shadow: 0 0 10px red;">🍅</span> <div class="rule-desc"><strong>Neon Tomato</strong><small>Splat! 150 pts but obscures screen.</small></div></li>
+                    </ul>
+
+                    <div class="rules-section-title">Specials</div>
+                    <ul>
+                        <li><span class="icon">🥑</span> <div class="rule-desc"><strong>Avocado</strong><small>+3 secondi. Raro come la stella.</small></div></li>
+                        <li><span class="icon">⭐</span> <div class="rule-desc"><strong>Ninja Star</strong><small>Doubles (2X) points for 6 seconds.</small></div></li>
+                        <li><span class="icon">❄️</span> <div class="rule-desc"><strong>Freeze</strong><small>Stops timer and slows fruit and can destroy bombs.</small></div></li>
+                        <li><span class="icon">🐲</span> <div class="rule-desc"><strong>Dragon Fruit</strong><small>Rare and fast. 100 points.</small></div></li>
+                    </ul>
+                `
+            }
+        };
+
+        // --- SINGLE DIFFICULTY MODE CONFIGURATION ---
+        // Unified difficulty with high bomb chance (35%)
+        // OPTIMIZATION: Increased spawn rates slightly
+        const GAME_CONFIG = {
+            spawnRateStart: 40, // Was 50 - Faster start
+            bombChance: 0.35, 
+            maxSpawnRate: 15 // Was 25 - Allow faster peak
+        };
+
+        let currentLang = localStorage.getItem('gameLanguage') || 'it';
+        // Performance Mode Setting
+        let performanceMode = localStorage.getItem('performanceMode') === 'true';
+
+        let bladeColor = '#fff';
+        let currentGameMode = 'classic'; // 'classic' or 'arcade'
+
+        // --- STATS PROFILO ---
+        // Added maxRank and lastRank
+        let userStats = JSON.parse(localStorage.getItem('fruitNinjaStats')) || {
+            gamesPlayed: 0,
+            bestScore: 0,
+            totalScore: 0,
+            maxCombo: 0,
+            maxRank: 'NONE',
+            lastRank: '-',
+            bombsExploded: 0
+        };
+
+        // Migration for old stats without ranks
+        if(!userStats.maxRank) userStats.maxRank = 'NONE';
+        if(!userStats.lastRank) userStats.lastRank = '-';
+        if(!userStats.bombsExploded) userStats.bombsExploded = 0;
+
+        function saveStats() {
+            localStorage.setItem('fruitNinjaStats', JSON.stringify(userStats));
+        }
+
+        function getStrings() {
+            return localStrings[currentLang] || localStrings['it'];
+        }
+
+        function updateUIStrings() {
+            const strings = getStrings();
+            document.title = strings.TITLE;
+            
+            // Menu Buttons
+            document.getElementById('btn-text-play').innerText = strings.BUTTON_PLAY;
+            document.getElementById('btn-text-arcade').innerText = strings.BUTTON_ARCADE;
+            document.getElementById('btn-text-profile').innerText = strings.BUTTON_PROFILE;
+            document.getElementById('btn-custom').lastChild.textContent = " " + strings.BUTTON_CUSTOM;
+            document.getElementById('btn-rules').lastChild.textContent = " " + strings.BUTTON_RULES;
+            document.getElementById('btn-settings').lastChild.textContent = " " + strings.BUTTON_SETTINGS;
+            
+            // Customize
+            document.getElementById('cust-title').innerText = strings.CUST_TITLE;
+            document.getElementById('cust-blade-label').innerText = strings.CUST_BLADE;
+            document.getElementById('cust-bg-label').innerText = strings.CUST_BG;
+            document.getElementById('cust-close-btn').innerText = strings.CLOSE;
+
+            // Profile
+            document.getElementById('profile-title').innerText = strings.PROFILE_TITLE;
+            document.getElementById('label-games').innerText = strings.LABEL_GAMES;
+            document.getElementById('label-best').innerText = strings.LABEL_BEST;
+            document.getElementById('label-total').innerText = strings.LABEL_TOTAL;
+            document.getElementById('label-combo').innerText = strings.LABEL_COMBO;
+            document.getElementById('label-max-rank').innerText = strings.LABEL_MAX_RANK;
+            document.getElementById('label-last-rank').innerText = strings.LABEL_LAST_RANK;
+            document.getElementById('label-bombs').innerText = strings.LABEL_BOMBS; 
+            document.getElementById('profile-close-btn').innerText = strings.CLOSE;
+
+            // Rules
+            document.getElementById('rules-title').innerText = strings.RULES_TITLE;
+            document.getElementById('rules-content').innerHTML = strings.RULES_CONTENT;
+            document.getElementById('rules-close-btn').innerText = strings.CLOSE;
+
+            // HUD
+            document.getElementById('score-label').innerText = strings.SCORE_LABEL;
+            
+            // Game Over
+            document.getElementById('game-over-title').innerText = strings.GAME_OVER;
+            document.getElementById('final-score-label-text').innerText = strings.FINAL_SCORE_LABEL;
+            document.getElementById('rank-label').innerText = strings.RANK_LABEL;
+            document.getElementById('game-over-retry-btn').innerText = strings.BUTTON_RETRY;
+            
+            // Settings
+            document.getElementById('settings-title').innerText = strings.SETTINGS_TITLE;
+            document.getElementById('settings-lang-label').innerText = strings.LANGUAGE;
+            document.getElementById('settings-perf-label').innerText = strings.SETTINGS_PERF_LABEL;
+            document.getElementById('settings-perf-desc').innerText = strings.SETTINGS_PERF_DESC;
+            document.getElementById('settings-close-btn').innerText = strings.SAVE_CLOSE;
+
+            document.getElementById('language-selector').value = currentLang;
+        }
+
+        // --- AUDIO ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'slice') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'ice-break') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.1);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'tomato') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'avocado' || type === 'drink') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'dragon') { 
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.3);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'splat') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.15);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'boom' || type === 'melon') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'combo') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.setValueAtTime(1200, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'freeze') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.linearRampToValueAtTime(400, now + 1);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now); osc.stop(now + 1);
+            } else if (type === 'bonus' || type === 'pear') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.linearRampToValueAtTime(1500, now + 0.5);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            } else if (type === 'rainbow') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.2);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.4);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            } else if (type === 'thud') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'star') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, now);
+                osc.frequency.linearRampToValueAtTime(2000, now + 0.3);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'time-penalty') {
+                // Low pitch thud
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            }
+        }
+
+        // --- GAME ENGINE ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameContainer = document.getElementById('game-container');
+        
+        const scoreVal = document.getElementById('score-val');
+        const timerDisplay = document.getElementById('timer-display');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const settingsScreen = document.getElementById('settings-screen');
+        const customizeScreen = document.getElementById('customize-screen');
+        const profileScreen = document.getElementById('profile-screen');
+        const rulesScreen = document.getElementById('rules-screen');
+        const bestScoreEl = document.getElementById('best-score');
+        const homeBtn = document.getElementById('game-home-btn');
+        const scoreBoxContainer = document.getElementById('score-box-container');
+        const fpsCounter = document.getElementById('fps-counter');
+
+        let width, height;
+        let gameActive = false;
+        let score = 0;
+        let gameTime = 60;
+        let frame = 0;
+        
+        let entities = []; 
+        let particles = []; 
+        let splats = []; 
+        let floaters = []; 
+        let trail = []; 
+        
+        let spawnRate = 60;
+        let bombChance = 0.20;
+        let maxSpawnRate = 20;
+        
+        let mouse = { x: 0, y: 0, isDown: false };
+        let comboCount = 0;
+        let lastCutTime = 0;
+        let currentMaxCombo = 0; 
+
+        let timeScale = 1.0;
+        let freezeTimer = 0; 
+        let frenzyTimer = 0; 
+        let starTimer = 0;
+        
+        // FPS Calc
+        let lastTime = performance.now();
+        let fps = 0;
+
+        const FRUITS_DATA = [
+            { icon: '🍎', color: '#e74c3c' },
+            { icon: '🍌', color: '#f1c40f' },
+            { icon: '🍉', color: '#2ecc71' },
+            { icon: '🥝', color: '#8bc34a' },
+            { icon: '🥥', color: '#ecf0f1' },
+            { icon: '🍊', color: '#e67e22' },
+            { icon: '🍇', color: '#9b59b6' },
+            { icon: '🍍', color: '#f39c12' }, 
+            { icon: '🍑', color: '#e9967a' },
+            { icon: '🍓', color: '#ff4757' }, 
+            { icon: '🥭', color: '#ffc107' }
+        ];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            if (!gameActive) {
+                 ctx.fillStyle = "#fff";
+                 ctx.font = "30px Fredoka One";
+                 ctx.textAlign = "center";
+                 ctx.fillText(getStrings().LOADING, width/2, height/2);
+            }
+        }
+        window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', () => {
+             setTimeout(resize, 200); // Wait for orientation to settle
+        });
+        resize();
+        updateUIStrings();
+
+        function shakeScreen(intensity = 10) {
+            gameContainer.style.transform = `translate(${Math.random()*intensity-(intensity/2)}px, ${Math.random()*intensity-(intensity/2)}px)`;
+            setTimeout(() => {
+                gameContainer.style.transform = `translate(${Math.random()*(intensity/2)-(intensity/4)}px, ${Math.random()*(intensity/2)-(intensity/4)}px)`;
+                setTimeout(() => { gameContainer.style.transform = 'none'; }, 50);
+            }, 50);
+        }
+
+        function flashDamage() {
+            gameContainer.classList.add('damage-flash');
+            setTimeout(() => gameContainer.classList.remove('damage-flash'), 300);
+        }
+        
+        function flashGreen() {
+            gameContainer.classList.add('pear-flash');
+            setTimeout(() => gameContainer.classList.remove('pear-flash'), 500);
+        }
+
+        function splatScreen() {
+            // PERFORMANCE MODE CHECK
+            if (performanceMode) return;
+            
+            gameContainer.classList.add('tomato-splat');
+            setTimeout(() => gameContainer.classList.remove('tomato-splat'), 800);
+        }
+
+        class Entity {
+            constructor(isFrenzySpawn = false, forceDragon = false, forceType = null) {
+                this.active = true;
+                this.rotation = 0;
+                this.rotSpeed = (Math.random() - 0.5) * 0.2;
+                this.hp = 1;
+                
+                // MOBILE DETECTION FOR PHYSICS
+                const isPortrait = height > width;
+
+                if (forceDragon) {
+                    this.type = 'dragon';
+                    this.icon = '🐲';
+                    this.color = '#C71585'; 
+                    this.radius = 45;
+                    this.y = Math.random() * (height * 0.6) + (height * 0.1); 
+                    this.gravity = 0; 
+                    
+                    if (Math.random() > 0.5) {
+                        this.x = -50;
+                        this.vx = (Math.random() * 5 + 15); 
+                    } else {
+                        this.x = width + 50;
+                        this.vx = -(Math.random() * 5 + 15);
+                    }
+                    this.vy = 0; 
+                } else if (isFrenzySpawn) {
+                    this.type = 'fruit';
+                    const type = FRUITS_DATA[Math.floor(Math.random() * FRUITS_DATA.length)];
+                    this.icon = type.icon;
+                    this.color = type.color;
+                    this.radius = 35;
+                    this.gravity = 0.25;
+
+                    this.x = Math.random() > 0.5 ? 0 : width; 
+                    this.y = Math.random() * (height / 2) + height/2;
+                    const dirX = (width/2) - this.x;
+                    this.vx = (dirX * 0.015) + (Math.random() - 0.5) * 5;
+                    this.vy = -(Math.random() * 10 + 10);
+                } else {
+                    this.x = Math.random() * (width - 100) + 50;
+                    this.y = height + 60;
+                    const dirX = (width / 2) - this.x;
+                    this.vx = (dirX * 0.01) + (Math.random() - 0.5) * 2; 
+                    
+                    // --- PHYSICS ADJUSTMENT FOR MOBILE ---
+                    let baseVyMin = 13;
+                    let baseVyMax = 18; // 13+5
+                    
+                    if (isPortrait) {
+                        // Boost vertical velocity by ~25% if portrait to reach higher
+                        baseVyMin = 16;
+                        baseVyMax = 22;
+                    }
+                    
+                    this.vy = -(Math.random() * (baseVyMax - baseVyMin) + baseVyMin); 
+                    
+                    this.gravity = 0.25;
+                    this.radius = 35;
+
+                    if (forceType === 'berry') {
+                        this.type = 'berry';
+                        this.icon = '🍒';
+                        this.color = '#a00030';
+                        this.radius = 25; 
+                        this.vx = this.vx * 1.2; 
+                        return;
+                    }
+
+                    const rand = Math.random();
+                    
+                    // ARCADE MODE SPAWN LOGIC
+                    if (currentGameMode === 'arcade') {
+                         if (rand < 0.60) { 
+                            this.type = 'bomb';
+                            this.icon = '💣';
+                            this.color = '#333';
+                         } else {
+                            this.type = 'fruit';
+                            const type = FRUITS_DATA[Math.floor(Math.random() * FRUITS_DATA.length)];
+                            this.icon = type.icon;
+                            this.color = type.color;
+                         }
+                    } else {
+                        // CLASSIC SPAWN LOGIC (MODIFIED for more bombs)
+                        // Uses the global bombChance which is now 0.35 (35%)
+                        if (rand < bombChance) { 
+                            this.type = 'bomb';
+                            this.icon = '💣';
+                            this.color = '#333';
+                        } else if (rand > 0.99) { 
+                            this.type = 'gold';
+                            this.icon = '🍏';
+                            this.color = '#ffd700';
+                            this.radius = 40;
+                        } else if (rand > 0.98 && rand <= 0.99) {
+                            this.type = 'rainbow';
+                            this.icon = '🌈';
+                            this.color = '#ffffff'; 
+                            this.radius = 45;
+                        } else if (rand > 0.965 && rand <= 0.98) {
+                            this.type = 'freeze';
+                            this.icon = '❄️';
+                            this.color = '#00bfff';
+                            this.radius = 40;
+                        } else if (rand > 0.95 && rand <= 0.965) { 
+                            this.type = 'tomato'; // NEON TOMATO
+                            this.icon = '🍅';
+                            this.color = '#ff10f0'; 
+                            this.radius = 40;
+                        } else if (rand > 0.935 && rand <= 0.95) { 
+                            this.type = 'avocado'; 
+                            this.icon = '🥑';
+                            this.color = '#568203'; 
+                            this.radius = 40;
+                        } else if (rand > 0.92 && rand <= 0.935) { 
+                            this.type = 'star'; 
+                            this.icon = '⭐';
+                            this.color = '#FFD700'; 
+                            this.radius = 40;
+                        } else if (rand > 0.91 && rand <= 0.92) { 
+                            this.type = 'drink'; 
+                            this.icon = '🍹';
+                            this.color = '#00CED1'; 
+                            this.radius = 40;
+                            this.hp = 20; // MODIFIED: Requires 20 hits now
+                        } 
+                        else if (rand > 0.885 && rand <= 0.91) { 
+                            this.type = 'melon'; 
+                            this.icon = '🍈';
+                            this.color = '#90ee90'; 
+                            this.radius = 55; 
+                        } else if (rand > 0.86 && rand <= 0.885) { 
+                            this.type = 'pear'; 
+                            this.icon = '🍐';
+                            this.color = '#d1e231'; 
+                            this.radius = 40;
+                        } else if (rand > 0.84 && rand <= 0.86) { 
+                            this.type = 'berry';
+                            this.icon = '🍒';
+                            this.color = '#a00030'; 
+                            this.radius = 25; 
+                        } else if (rand > 0.82 && rand <= 0.84) { 
+                            this.type = 'mega';
+                            this.icon = '🍉';
+                            this.color = '#e74c3c';
+                            this.radius = 80;
+                            this.hp = 5;
+                        } else if (rand > 0.80 && rand <= 0.82) { 
+                            this.type = 'frenzy';
+                            this.icon = '⚡';
+                            this.color = '#ff9800';
+                            this.radius = 40;
+                        } else {
+                            // Standard fruit range is squeezed because bombChance took more of the 0-1 range
+                            this.type = 'fruit';
+                            const type = FRUITS_DATA[Math.floor(Math.random() * FRUITS_DATA.length)];
+                            this.icon = type.icon;
+                            this.color = type.color;
+                        }
+                    }
+                }
+            }
+
+            update() {
+                this.x += this.vx * timeScale;
+                this.y += this.vy * timeScale;
+                this.vy += this.gravity * timeScale; 
+                this.rotation += this.rotSpeed * timeScale;
+
+                if (this.type === 'mega' || this.type === 'melon') this.vy += 0.05 * timeScale; // Heavies fall faster
+
+                if (this.y > height + 150 || this.x < -100 || this.x > width + 100) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                // SHADOWS & GLOWS
+                if (this.type === 'dragon') {
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 30; 
+                } else if (this.type === 'rainbow' || this.type === 'star' || this.type === 'boom') {
+                    const hue = (Date.now() / 5) % 360;
+                    if (this.type === 'star') ctx.shadowColor = '#FFD700';
+                    else if (this.type === 'boom') ctx.shadowColor = '#FF4500';
+                    else ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                    ctx.shadowBlur = 25;
+                } else if (this.type === 'tomato') {
+                    ctx.shadowColor = '#ff0000';
+                    ctx.shadowBlur = 40; 
+                } else if (['gold', 'frenzy', 'freeze', 'avocado', 'drink'].includes(this.type)) {
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 20;
+                } else {
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    ctx.shadowBlur = 10;
+                }
+
+                let size = 60;
+                if (this.type === 'mega') size = 140;
+                if (this.type === 'melon') size = 90; // Big melon
+                if (this.type === 'dragon') size = 80;
+                if (['rainbow', 'star', 'boom'].includes(this.type)) size = 70;
+                if (this.type === 'berry') size = 40; // Small berry
+
+                ctx.font = `${size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (this.type === 'gold') ctx.filter = 'sepia(100%) saturate(300%) hue-rotate(50deg)';
+                if (this.type === 'tomato') ctx.filter = 'brightness(1.5) contrast(1.2)'; // Neon filter
+                
+                ctx.fillText(this.icon, 0, 5);
+                
+                if (this.type === 'mega') {
+                    ctx.filter = 'none';
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 40px Arial";
+                    ctx.fillText(this.hp, 0, 0);
+                }
+                
+                if (this.type === 'drink' && this.hp > 0) {
+                    ctx.filter = 'none';
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 30px Arial";
+                    ctx.fillText(this.hp, 0, 0);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color, isSparkle = false) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.life = 1.0;
+                this.color = color;
+                this.size = Math.random() * 5 + 3;
+                this.isSparkle = isSparkle;
+                this.gravity = 0.3; 
+            }
+            update() {
+                this.x += this.vx * timeScale;
+                this.y += this.vy * timeScale;
+                if (!this.isSparkle) this.vy += this.gravity * timeScale; 
+                
+                this.life -= 0.02 * timeScale;
+            }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                if (this.isSparkle) ctx.rect(this.x, this.y, this.size, this.size);
+                else ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        class Splat {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.life = 1.0;
+                this.radius = Math.random() * 40 + 20;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.decayDelay = 120; 
+            }
+            update() {
+                if (this.decayDelay > 0) {
+                    this.decayDelay--;
+                } else {
+                    this.life -= 0.05; 
+                }
+            }
+            draw() {
+                if (this.life <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.life * 0.6;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.color;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI*2);
+                ctx.moveTo(10, 10);
+                ctx.arc(15, -15, this.radius/2, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        class Floater {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 1.0;
+                this.vy = -2;
+            }
+            update() {
+                this.y += this.vy * timeScale;
+                this.life -= 0.015;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.font = "bold 30px 'Fredoka One'";
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 5;
+                ctx.strokeText(this.text, this.x, this.y);
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- GAME LOGIC ---
+
+        function initGame(mode) {
+            currentGameMode = mode || 'classic';
+            score = 0;
+            gameTime = 60.0;
+            freezeTimer = 0;
+            frenzyTimer = 0;
+            starTimer = 0;
+            timeScale = 1.0;
+            currentMaxCombo = 0;
+            
+            // USE UNIFIED CONFIG
+            spawnRate = GAME_CONFIG.spawnRateStart;
+            bombChance = GAME_CONFIG.bombChance;
+            maxSpawnRate = GAME_CONFIG.maxSpawnRate;
+
+            // Adjust spawn for arcade
+            if (currentGameMode === 'arcade') {
+                gameContainer.classList.add('mode-arcade');
+                spawnRate = 28;
+            } else {
+                gameContainer.classList.remove('mode-arcade');
+            }
+            
+            homeBtn.style.display = 'flex'; 
+            scoreVal.innerText = score;
+            entities = [];
+            particles = [];
+            splats = [];
+            floaters = [];
+            gameActive = true;
+            
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            settingsScreen.classList.add('hidden');
+            customizeScreen.classList.add('hidden');
+            profileScreen.classList.add('hidden');
+            rulesScreen.classList.add('hidden');
+            gameContainer.classList.remove('frozen');
+            scoreBoxContainer.classList.remove('active-2x');
+            
+            animate();
+        }
+
+        function resetGame() {
+            gameActive = false;
+            startScreen.classList.remove('hidden');
+            gameOverScreen.classList.add('hidden');
+            homeBtn.style.display = 'none';
+        }
+
+        function calculateRank(score) {
+            if (score >= 10000) return 'S';
+            if (score >= 5000) return 'A';
+            if (score >= 2500) return 'B';
+            if (score >= 1000) return 'C';
+            return 'NONE';
+        }
+
+        function getRankValue(rank) {
+            switch(rank) {
+                case 'S': return 5;
+                case 'A': return 4;
+                case 'B': return 3;
+                case 'C': return 2;
+                default: return 1;
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            playSound('boom');
+            homeBtn.style.display = 'none';
+            scoreBoxContainer.classList.remove('active-2x');
+            
+            document.getElementById('final-score').innerText = score;
+            gameContainer.classList.remove('frozen');
+            
+            // Only update stats if CLASSIC mode
+            const currentRank = calculateRank(score);
+            
+            if (currentGameMode === 'classic') {
+                // Stats Update
+                userStats.gamesPlayed++;
+                userStats.totalScore += score;
+                userStats.lastRank = currentRank;
+
+                if (score > userStats.bestScore) userStats.bestScore = score;
+                if (currentMaxCombo > userStats.maxCombo) userStats.maxCombo = currentMaxCombo;
+                
+                // Update Max Rank logic
+                if (getRankValue(currentRank) > getRankValue(userStats.maxRank)) {
+                    userStats.maxRank = currentRank;
+                } else if (userStats.maxRank === 'NONE') {
+                    userStats.maxRank = currentRank;
+                }
+
+                saveStats();
+                
+                if (score > (localStorage.getItem('fruitNinjaArcadeBest') || 0)) {
+                    localStorage.setItem(`fruitNinjaArcadeBest`, score);
+                    bestScoreEl.innerText = getStrings().NEW_RECORD;
+                } else {
+                    bestScoreEl.innerText = `${getStrings().RECORD} ${userStats.bestScore}`;
+                }
+            } else {
+                bestScoreEl.innerText = "ARCADE MODE";
+            }
+
+            // Rank Badge UI
+            const rankBadge = document.getElementById('rank-badge');
+            rankBadge.className = `rank-badge rank-${currentRank}`;
+            rankBadge.innerText = currentRank;
+
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function createParticles(x, y, color, isSparkle = false) {
+            const count = isSparkle ? 25 : 12;
+            for(let i=0; i<count; i++) {
+                let pColor = color;
+                if (color === 'rainbow') {
+                     const h = Math.random() * 360;
+                     pColor = `hsl(${h}, 100%, 60%)`;
+                }
+                particles.push(new Particle(x, y, pColor, isSparkle));
+            }
+        }
+
+        function activateFreeze() {
+            freezeTimer = 180;
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, getStrings().FREEZE_TEXT, "#00bfff"));
+            playSound('freeze');
+            gameContainer.classList.add('frozen');
+        }
+
+        function activateFrenzy() {
+            frenzyTimer = 300;
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, getStrings().FRENZY_TEXT, "#ff9800"));
+            playSound('bonus');
+        }
+
+        function activateStar() {
+            starTimer = 360;
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, "DOUBLE POINTS!", "#FFFF00"));
+            scoreBoxContainer.classList.add('active-2x');
+            playSound('star');
+        }
+
+        function activatePearCleanse() {
+            // Clears all bombs
+            let bombsRemoved = 0;
+            entities.forEach(ent => {
+                if (ent.active && ent.type === 'bomb') {
+                    ent.active = false;
+                    createParticles(ent.x, ent.y, '#fff', true); // Poof
+                    bombsRemoved++;
+                }
+            });
+            flashGreen();
+            playSound('pear');
+            const msg = bombsRemoved > 0 ? "BOMBS CLEARED!" : "SAFE AREA!";
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, msg, "#d1e231"));
+        }
+
+        function activateMelonSplash(x, y) {
+            // UPDATED: Now clears screen like Boom! but with Green effects
+            createParticles(x, y, '#90ee90', true);
+            shakeScreen(30);
+            playSound('melon');
+            
+            // Global green flash
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.inset = '0';
+            flash.style.background = '#90ee90'; 
+            flash.style.opacity = '0.7';
+            flash.style.zIndex = '30';
+            flash.style.pointerEvents = 'none';
+            flash.style.transition = 'opacity 0.5s';
+            gameContainer.appendChild(flash);
+            setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 50);
+            
+            let killCount = 0;
+            // Iterate ALL entities (global) like Boom
+            entities.forEach(ent => {
+                // Destroy everything except bombs and the melon itself (avoid recursion)
+                if (ent.active && ent.type !== 'bomb' && ent.type !== 'melon') {
+                    destroyEntity(ent, true); // Force kill
+                    killCount++;
+                }
+            });
+            
+            if (killCount > 0) {
+                 if(!performanceMode) floaters.push(new Floater(width/2, height/2, `MELON BLAST! +${killCount*50}`, "#90ee90"));
+                 score += killCount * 50;
+                 scoreVal.innerText = score;
+            }
+        }
+
+        function activateBoom() {
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, "BOOM!", "#FF4500"));
+            shakeScreen(30);
+            playSound('boom');
+            
+            const flash = document.createElement('div');
+            flash.style.position = 'absolute';
+            flash.style.inset = '0';
+            flash.style.background = '#fff';
+            flash.style.opacity = '0.8';
+            flash.style.zIndex = '30';
+            flash.style.pointerEvents = 'none';
+            flash.style.transition = 'opacity 0.5s';
+            gameContainer.appendChild(flash);
+            setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 50);
+
+            entities.forEach(ent => {
+                if (ent.active && ent.type !== 'bomb' && ent.type !== 'boom') {
+                     destroyEntity(ent, true);
+                }
+            });
+        }
+
+        function destroyEntity(ent, forceKill = false) {
+             const strings = getStrings();
+             
+             // --- ARCADE MODE LOGIC (MODIFICATA) ---
+             if (currentGameMode === 'arcade') {
+                 if (ent.type === 'bomb') {
+                     // BOMB IS GOOD IN ARCADE
+                     ent.active = false;
+                     playSound('slice');
+                     createParticles(ent.x, ent.y, '#333', true);
+                     createParticles(ent.x, ent.y, '#ffd700', true); // Golden sparks
+                     
+                     // MODIFIED: +0.5 Seconds
+                     gameTime += 0.5;
+                     score += 10;
+                     scoreVal.innerText = score;
+                     if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, strings.TIME_ARCADE_BONUS, '#2ecc71'));
+                     
+                 } else {
+                     // FRUITS ARE BAD IN ARCADE
+                     ent.active = false;
+                     playSound('thud');
+                     
+                     // MODIFIED: -10 Seconds
+                     gameTime -= 10;
+                     
+                     shakeScreen(5);
+                     if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, strings.TIME_ARCADE_PENALTY, '#ff4757'));
+                     createParticles(ent.x, ent.y, ent.color || '#fff');
+                     if(!performanceMode) splats.push(new Splat(ent.x, ent.y, ent.color || '#fff'));
+                 }
+                 return;
+             }
+
+             // --- CLASSIC MODE LOGIC ---
+             if (ent.type === 'mega' && !forceKill) {
+                ent.hp--;
+                createParticles(ent.x, ent.y, '#e74c3c', true);
+                playSound('thud');
+                shakeScreen(15);
+                if (ent.hp > 0) {
+                    ent.vy = -5;
+                    if(!performanceMode) floaters.push(new Floater(ent.x, ent.y - 40, strings.MEGA_HIT, '#fff'));
+                    return; 
+                }
+            } else if (ent.type === 'drink' && !forceKill) { 
+                ent.hp--;
+                createParticles(ent.x, ent.y, '#00CED1', true);
+                playSound('thud');
+                shakeScreen(15);
+                if (ent.hp > 0) {
+                    ent.vy = -5;
+                    if(!performanceMode) floaters.push(new Floater(ent.x, ent.y - 40, strings.MEGA_HIT, '#fff'));
+                    return; 
+                }
+            }
+
+            ent.active = false;
+
+            if (ent.type === 'bomb') {
+                // MODIFIED: If frozen, bomb gives points!
+                if(!forceKill) {
+                    if (freezeTimer > 0) {
+                        playSound('ice-break');
+                        score += 50;
+                        scoreVal.innerText = score;
+                        if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+50", '#00bfff'));
+                        createParticles(ent.x, ent.y, '#a0e6ff', true); // Ice particles
+                        createParticles(ent.x, ent.y, '#fff', true);
+                    } else {
+                        playSound('boom');
+                        flashDamage();
+                        shakeScreen(20);
+                        score = Math.max(0, score - 100);
+                        scoreVal.innerText = score;
+                        gameTime = Math.max(0, gameTime - 10);
+                        if(!performanceMode) {
+                            floaters.push(new Floater(ent.x, ent.y, strings.BOMB_PENALTY, '#e74c3c'));
+                            floaters.push(new Floater(ent.x, ent.y + 40, strings.TIME_PENALTY, '#e74c3c'));
+                        }
+                        comboCount = 0; 
+                        
+                        userStats.bombsExploded++;
+                        saveStats();
+                    }
+                }
+            } else if (ent.type === 'gold') {
+                playSound('bonus');
+                gameTime += 5;
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+5s", '#ffd700'));
+                score += (starTimer > 0 ? 100 : 50); 
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#ffd700', true);
+
+            } else if (ent.type === 'tomato') { 
+                playSound('tomato');
+                splatScreen(); // Red splat - has check inside
+                const pts = starTimer > 0 ? 300 : 150;
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, `+${pts}`, '#ff10f0'));
+                score += pts;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#ff10f0', true);
+
+            } else if (ent.type === 'avocado') { 
+                playSound('avocado');
+                gameTime += 3;
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+3s", '#568203'));
+                const pts = starTimer > 0 ? 400 : 200;
+                score += pts;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#568203', true);
+
+            } else if (ent.type === 'drink') { 
+                playSound('drink');
+                gameTime += 10; 
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+10s", '#00CED1'));
+                const pts = starTimer > 0 ? 400 : 200;
+                score += pts;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#00CED1', true);
+            
+            } else if (ent.type === 'melon') { 
+                activateMelonSplash(ent.x, ent.y);
+                const pts = starTimer > 0 ? 300 : 150;
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y-40, `+${pts}`, '#90ee90'));
+                score += pts;
+                scoreVal.innerText = score;
+
+            } else if (ent.type === 'pear') { 
+                activatePearCleanse();
+                const pts = starTimer > 0 ? 200 : 100;
+                score += pts;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#d1e231', true);
+
+            } else if (ent.type === 'rainbow') {
+                playSound('rainbow');
+                const baseBonus = Math.floor(Math.random() * 100) + 50;
+                const bonus = starTimer > 0 ? baseBonus * 2 : baseBonus;
+                if(!performanceMode) {
+                    floaters.push(new Floater(ent.x, ent.y, `+${bonus}`, 'magenta'));
+                    floaters.push(new Floater(ent.x, ent.y + 50, strings.RAINBOW_TEXT, '#fff'));
+                }
+                score += bonus;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, 'rainbow', true);
+                shakeScreen(10);
+
+            } else if (ent.type === 'dragon') {
+                playSound('dragon');
+                const pts = starTimer > 0 ? 200 : 100;
+                if(!performanceMode) {
+                    floaters.push(new Floater(ent.x, ent.y, `+${pts}`, '#C71585'));
+                    floaters.push(new Floater(ent.x, ent.y + 50, strings.DRAGON_TEXT, '#fff'));
+                }
+                score += pts;
+                scoreVal.innerText = score;
+                createParticles(ent.x, ent.y, '#C71585', true);
+                shakeScreen(15);
+
+            } else if (ent.type === 'freeze') {
+                activateFreeze();
+                createParticles(ent.x, ent.y, '#00bfff', true);
+
+            } else if (ent.type === 'frenzy') {
+                activateFrenzy();
+                createParticles(ent.x, ent.y, '#ff9800', true);
+            
+            } else if (ent.type === 'star') { 
+                activateStar();
+                createParticles(ent.x, ent.y, '#FFFF00', true);
+
+            } else if (ent.type === 'boom') { 
+                activateBoom();
+                createParticles(ent.x, ent.y, '#FF4500', true);
+
+            } else {
+                playSound('slice');
+                playSound('splat');
+                
+                let pts = 10;
+                if (ent.type === 'mega') pts = 50;
+                if (ent.type === 'berry') pts = 20; 
+                
+                const isCritical = Math.random() < 0.1;
+                if (isCritical) {
+                    pts *= 2;
+                    if(!performanceMode) floaters.push(new Floater(ent.x, ent.y-20, strings.CRITICAL_TEXT, "#e74c3c"));
+                    createParticles(ent.x, ent.y, '#fff', true); 
+                }
+
+                if (!forceKill) {
+                    const now = Date.now();
+                    const comboWindow = freezeTimer > 0 ? 600 : 300; 
+
+                    if (now - lastCutTime < comboWindow) {
+                        comboCount++;
+                    } else {
+                        comboCount = 1;
+                    }
+                    lastCutTime = now;
+                    
+                    if (comboCount > currentMaxCombo) currentMaxCombo = comboCount;
+
+                    if (comboCount > 1) {
+                        pts += comboCount * 5;
+                        gameContainer.style.transform = `scale(${1 + (comboCount * 0.005)})`;
+                        setTimeout(() => gameContainer.style.transform = 'scale(1)', 50);
+                        
+                        if(!performanceMode) {
+                            floaters.push(new Floater(ent.x, ent.y - 50, `x${comboCount} COMBO!`, '#f1c40f'));
+                        }
+                        
+                        playSound('combo');
+                        if (comboCount >= 3) {
+                            gameTime += 1;
+                            if(!performanceMode) floaters.push(new Floater(ent.x, ent.y - 80, strings.TIME_EXT, '#2ecc71'));
+                        }
+                    } else if (!isCritical) {
+                        if(!performanceMode) floaters.push(new Floater(ent.x, ent.y - 40, `+${pts}`, '#fff'));
+                    }
+                } else {
+                    if(!performanceMode) floaters.push(new Floater(ent.x, ent.y - 40, `+${pts}`, '#fff'));
+                }
+
+                if (starTimer > 0) pts *= 2;
+
+                score += pts;
+                scoreVal.innerText = score;
+
+                createParticles(ent.x, ent.y, ent.color);
+                if(!performanceMode) splats.push(new Splat(ent.x, ent.y, ent.color));
+            }
+        }
+
+        function checkCollision(x, y) {
+            entities.forEach(ent => {
+                if (!ent.active) return;
+                
+                const dx = ent.x - x;
+                const dy = ent.y - y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < ent.radius + 20) {
+                    destroyEntity(ent);
+                }
+            });
+        }
+
+        // --- UI FUNCTIONS ---
+        function openCustomize() {
+            startScreen.classList.add('hidden');
+            customizeScreen.classList.remove('hidden');
+        }
+
+        function closeCustomize() {
+            customizeScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function openProfile() {
+            // Update stats including new Ranks
+            document.getElementById('stat-games').innerText = userStats.gamesPlayed;
+            document.getElementById('stat-best').innerText = userStats.bestScore;
+            document.getElementById('stat-total-score').innerText = userStats.totalScore;
+            document.getElementById('stat-max-combo').innerText = userStats.maxCombo;
+            document.getElementById('stat-bombs-exploded').innerText = userStats.bombsExploded; // NEW
+
+            // New Ranks
+            const maxRankEl = document.getElementById('stat-max-rank');
+            maxRankEl.innerText = userStats.maxRank;
+            maxRankEl.className = `rank-card-val rank-${userStats.maxRank}`; // Add color class
+            
+            // Update Max Rank Card Style
+            const maxRankCard = document.querySelector('.rank-card.max-rank');
+            maxRankCard.style.borderColor = `var(--rank-${userStats.maxRank.toLowerCase()})`;
+            
+            const lastRankEl = document.getElementById('stat-last-rank');
+            lastRankEl.innerText = userStats.lastRank;
+            lastRankEl.className = `rank-card-val rank-${userStats.lastRank}`;
+
+            startScreen.classList.add('hidden');
+            profileScreen.classList.remove('hidden');
+        }
+
+        function closeProfile() {
+            profileScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function openRules() {
+            startScreen.classList.add('hidden');
+            rulesScreen.classList.remove('hidden');
+        }
+        
+        function closeRules() {
+            rulesScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        document.querySelectorAll('#blade-colors .color-opt').forEach(el => {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('#blade-colors .color-opt').forEach(d => d.classList.remove('selected'));
+                this.classList.add('selected');
+                bladeColor = this.getAttribute('data-color');
+            });
+        });
+
+        function setBg(type) {
+             gameContainer.className = '';
+             if (type === 'default') {
+                 gameContainer.classList.add('bg-default');
+             } else {
+                 gameContainer.classList.add('bg-' + type);
+             }
+             document.querySelectorAll('#bg-options .color-opt').forEach(d => d.classList.remove('selected'));
+             event.target.classList.add('selected');
+        }
+
+        function openSettings() {
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            document.getElementById('language-selector').value = currentLang;
+            // Set Checkbox State
+            document.getElementById('perf-mode-check').checked = performanceMode;
+            
+            settingsScreen.classList.remove('hidden');
+        }
+
+        function closeSettings() {
+            const newLang = document.getElementById('language-selector').value;
+            // Get Checkbox State
+            const newPerfMode = document.getElementById('perf-mode-check').checked;
+            
+            if (newLang !== currentLang) {
+                currentLang = newLang;
+                localStorage.setItem('gameLanguage', newLang);
+                updateUIStrings(); 
+            }
+            
+            if (newPerfMode !== performanceMode) {
+                performanceMode = newPerfMode;
+                localStorage.setItem('performanceMode', newPerfMode);
+            }
+
+            settingsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        // --- INPUT ---
+        function handleInputStart(e) {
+            if (settingsScreen.classList.contains('hidden') && customizeScreen.classList.contains('hidden') && profileScreen.classList.contains('hidden') && rulesScreen.classList.contains('hidden')) { 
+                mouse.isDown = true;
+                trail = [];
+                const pos = getPos(e);
+                mouse.x = pos.x;
+                mouse.y = pos.y;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            }
+        }
+
+        function handleInputMove(e) {
+            if (!mouse.isDown || !gameActive) return;
+            const pos = getPos(e);
+            
+            const dist = Math.hypot(pos.x - mouse.x, pos.y - mouse.y);
+            if (dist > 5) {
+                checkCollision(pos.x, pos.y);
+            }
+
+            trail.push({x: pos.x, y: pos.y});
+            if (trail.length > 8) trail.shift();
+            
+            mouse.x = pos.x;
+            mouse.y = pos.y;
+        }
+
+        function handleInputEnd() {
+            mouse.isDown = false;
+            trail = [];
+        }
+
+        function getPos(e) {
+            if(e.touches) {
+                return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+            }
+            return {x: e.clientX, y: e.clientY};
+        }
+
+        window.addEventListener('mousedown', handleInputStart);
+        window.addEventListener('mousemove', handleInputMove);
+        window.addEventListener('mouseup', handleInputEnd);
+        window.addEventListener('touchstart', handleInputStart, {passive: false});
+        window.addEventListener('touchmove', (e) => { e.preventDefault(); handleInputMove(e); }, {passive: false});
+        window.addEventListener('touchend', handleInputEnd);
+
+        // --- ANIMATION ---
+        function animate() {
+            if (!gameActive) return;
+            
+            // FPS Counter Logic
+            const now = performance.now();
+            const delta = now - lastTime;
+            lastTime = now;
+            fps = Math.round(1000 / delta);
+            if (frame % 30 === 0) { // Update text only every 30 frames to be readable
+                 fpsCounter.innerText = "FPS: " + fps;
+            }
+
+            ctx.clearRect(0, 0, width, height);
+            
+            if (freezeTimer <= 0 && frenzyTimer <= 0) {
+                gameTime -= 1/60;
+            } else if (frenzyTimer > 0) {
+            } else {
+                 gameTime -= 0.2/60;
+            }
+
+            if (gameTime <= 0) {
+                gameTime = 0;
+                gameOver();
+            }
+
+            timerDisplay.innerText = Math.ceil(gameTime);
+            if (gameTime < 10) timerDisplay.classList.add('timer-low');
+            else timerDisplay.classList.remove('timer-low');
+
+            // Handle Timers
+            if (freezeTimer > 0) {
+                freezeTimer--;
+                timeScale = 0.2; 
+                if (freezeTimer <= 0) {
+                    timeScale = 1.0;
+                    gameContainer.classList.remove('frozen');
+                }
+            }
+            if (starTimer > 0) {
+                starTimer--;
+                if (starTimer <= 0) scoreBoxContainer.classList.remove('active-2x');
+            }
+            
+            let currentSpawnRate = spawnRate;
+            if (frenzyTimer > 0) {
+                frenzyTimer--;
+                currentSpawnRate = 12;
+            }
+
+            // --- ENTITY LIMIT LOGIC ---
+            // If performance mode is ON, cap at 16. Otherwise, allow up to 20.
+            const maxEntities = performanceMode ? 16 : 20;
+
+            if (frame % Math.floor(currentSpawnRate) === 0) {
+                if (entities.length < maxEntities) { 
+                    if (frenzyTimer > 0) {
+                        entities.push(new Entity(true));
+                    } else {
+                        // Check if we should spawn berries cluster (rare spawn check override)
+                        if (Math.random() > 0.84 && Math.random() <= 0.86) {
+                            // Spawn 2-3 berries
+                            entities.push(new Entity(false, false, 'berry'));
+                            setTimeout(() => { if(entities.length < maxEntities) entities.push(new Entity(false, false, 'berry')); }, 100);
+                            setTimeout(() => { if(entities.length < maxEntities) entities.push(new Entity(false, false, 'berry')); }, 200);
+                        } else {
+                            // OPTIMIZATION: Reduced chance of spawning 3 items
+                            const count = Math.random() > 0.8 ? 2 : 1;
+                            
+                            for(let i=0; i<count; i++) {
+                                setTimeout(() => {
+                                    if(entities.length < maxEntities) entities.push(new Entity(false));
+                                }, i * 100);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (frame % 400 === 0 && Math.random() > 0.7) { 
+                 // Lower max special entities cap too
+                 if(entities.length < maxEntities) entities.push(new Entity(false, true)); 
+            }
+
+            frame++;
+            if (frame % 500 === 0 && spawnRate > maxSpawnRate) spawnRate -= 2;
+
+            splats.forEach((s, i) => {
+                s.update();
+                s.draw();
+                if (s.life <= 0) splats.splice(i, 1);
+            });
+            
+            // LAG OPTIMIZATION: Clean up splats faster if too many
+            if (splats.length > 30) splats.shift(); // Was 50
+
+            entities.forEach((e, i) => {
+                e.update();
+                e.draw();
+                if (!e.active) entities.splice(i, 1);
+            });
+
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            if (trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(trail[0].x, trail[0].y);
+                for (let i = 1; i < trail.length; i++) {
+                    const p0 = trail[i-1];
+                    const p1 = trail[i];
+                    const midX = (p0.x + p1.x) / 2;
+                    const midY = (p0.y + p1.y) / 2;
+                    ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+                }
+                ctx.lineCap = 'round';
+                ctx.lineWidth = 10;
+                
+                if (freezeTimer > 0) ctx.strokeStyle = '#00ffff';
+                else if (frenzyTimer > 0) ctx.strokeStyle = '#ffff00';
+                else if (starTimer > 0) ctx.strokeStyle = '#ff4757'; 
+                else {
+                    if (bladeColor === 'rainbow') {
+                        const grad = ctx.createLinearGradient(0,0,width,height);
+                        grad.addColorStop(0, 'red');
+                        grad.addColorStop(0.5, 'yellow');
+                        grad.addColorStop(1, 'blue');
+                        ctx.strokeStyle = grad;
+                    } else {
+                        ctx.strokeStyle = bladeColor;
+                    }
+                }
+
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = ctx.strokeStyle;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            floaters.forEach((f, i) => {
+                f.update();
+                f.draw();
+                if (f.life <= 0) floaters.splice(i, 1);
+            });
+            
+            if (freezeTimer > 0) {
+                ctx.fillStyle = "rgba(0, 191, 255, 0.7)";
+                const currentBarWidth = 300 * (freezeTimer / 180);
+                ctx.fillRect((width/2) - (currentBarWidth/2), height - 30, currentBarWidth, 10);
+            }
+
+            requestAnimationFrame(animate);
+        }
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "30px Fredoka One";
+        ctx.textAlign = "center";
+        ctx.fillText(getStrings().LOADING, width/2, height/2);
+
+        homeBtn.style.display = 'none';
+
+    </script>
+</body>
+</html>
