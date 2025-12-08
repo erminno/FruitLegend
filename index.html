@@ -493,7 +493,7 @@
         select:focus { border-color: var(--accent); background-color: rgba(0,0,0,0.5); }
         select option { background: #333; }
         
-        /* Checkbox Style for Performance Mode */
+        /* Checkbox Style */
         input[type="checkbox"] {
             width: 25px; height: 25px;
             accent-color: var(--accent);
@@ -759,6 +759,14 @@
                         <input type="checkbox" id="perf-mode-check">
                     </div>
                 </div>
+                <!-- High Gravity Mode (Slow Motion) -->
+                <div class="setting-panel">
+                    <span class="setting-label" id="settings-gravity-label">Gravità Alta</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                        <span style="color: #fff; font-size: 1rem; opacity: 0.8;" id="settings-gravity-desc">Rallenta Frutta (Mobile)</span>
+                        <input type="checkbox" id="gravity-mode-check">
+                    </div>
+                </div>
             </div>
             <button class="btn secondary compact" id="settings-close-btn" onclick="closeSettings()">SALVA & ESCI</button>
         </div>
@@ -785,6 +793,8 @@
                 SETTINGS_TITLE: 'OPZIONI',
                 SETTINGS_PERF_LABEL: 'Modalità Performance',
                 SETTINGS_PERF_DESC: 'No Splash/Scritte (Max 16 Entità)',
+                SETTINGS_GRAVITY_LABEL: 'Gravità Alta',
+                SETTINGS_GRAVITY_DESC: 'Rallenta Frutta (Mobile)',
                 LANGUAGE: 'Lingua:',
                 CLOSE: 'INDIETRO',
                 SAVE_CLOSE: 'SALVA & ESCI',
@@ -871,6 +881,8 @@
                 SETTINGS_TITLE: 'OPTIONS',
                 SETTINGS_PERF_LABEL: 'Performance Mode',
                 SETTINGS_PERF_DESC: 'No Splash/Text (Max 16 Entities)',
+                SETTINGS_GRAVITY_LABEL: 'High Gravity',
+                SETTINGS_GRAVITY_DESC: 'Slows down fruits (Mobile)',
                 LANGUAGE: 'Language',
                 CLOSE: 'BACK',
                 SAVE_CLOSE: 'SAVE & EXIT',
@@ -953,6 +965,8 @@
         let currentLang = localStorage.getItem('gameLanguage') || 'it';
         // Performance Mode Setting
         let performanceMode = localStorage.getItem('performanceMode') === 'true';
+        // Gravity Mode Setting (Slow Motion)
+        let highGravityMode = localStorage.getItem('highGravityMode') === 'true';
 
         let bladeColor = '#fff';
         let currentGameMode = 'classic'; // 'classic' or 'arcade'
@@ -1030,6 +1044,8 @@
             document.getElementById('settings-lang-label').innerText = strings.LANGUAGE;
             document.getElementById('settings-perf-label').innerText = strings.SETTINGS_PERF_LABEL;
             document.getElementById('settings-perf-desc').innerText = strings.SETTINGS_PERF_DESC;
+            document.getElementById('settings-gravity-label').innerText = strings.SETTINGS_GRAVITY_LABEL;
+            document.getElementById('settings-gravity-desc').innerText = strings.SETTINGS_GRAVITY_DESC;
             document.getElementById('settings-close-btn').innerText = strings.SAVE_CLOSE;
 
             document.getElementById('language-selector').value = currentLang;
@@ -1420,12 +1436,16 @@
             }
 
             update() {
-                this.x += this.vx * timeScale;
-                this.y += this.vy * timeScale;
-                this.vy += this.gravity * timeScale; 
-                this.rotation += this.rotSpeed * timeScale;
+                // HIGH GRAVITY MODE: Applies a drag factor (slows everything down)
+                // If ON: 0.75x speed. If OFF: 1.0x speed.
+                const speedMod = highGravityMode ? 0.75 : 1.0;
 
-                if (this.type === 'mega' || this.type === 'melon') this.vy += 0.05 * timeScale; // Heavies fall faster
+                this.x += this.vx * timeScale * speedMod;
+                this.y += this.vy * timeScale * speedMod;
+                this.vy += this.gravity * timeScale * speedMod; 
+                this.rotation += this.rotSpeed * timeScale * speedMod;
+
+                if (this.type === 'mega' || this.type === 'melon') this.vy += 0.05 * timeScale * speedMod; // Heavies fall faster
 
                 if (this.y > height + 150 || this.x < -100 || this.x > width + 100) {
                     this.active = false;
@@ -2136,6 +2156,7 @@
             document.getElementById('language-selector').value = currentLang;
             // Set Checkbox State
             document.getElementById('perf-mode-check').checked = performanceMode;
+            document.getElementById('gravity-mode-check').checked = highGravityMode;
             
             settingsScreen.classList.remove('hidden');
         }
@@ -2144,6 +2165,7 @@
             const newLang = document.getElementById('language-selector').value;
             // Get Checkbox State
             const newPerfMode = document.getElementById('perf-mode-check').checked;
+            const newGravityMode = document.getElementById('gravity-mode-check').checked;
             
             if (newLang !== currentLang) {
                 currentLang = newLang;
@@ -2154,6 +2176,11 @@
             if (newPerfMode !== performanceMode) {
                 performanceMode = newPerfMode;
                 localStorage.setItem('performanceMode', newPerfMode);
+            }
+            
+            if (newGravityMode !== highGravityMode) {
+                highGravityMode = newGravityMode;
+                localStorage.setItem('highGravityMode', newGravityMode);
             }
 
             settingsScreen.classList.add('hidden');
