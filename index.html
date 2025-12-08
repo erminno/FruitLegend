@@ -820,6 +820,14 @@
                         <li><span class="icon">💣</span> <div class="rule-desc"><strong>EVITA le Bombe</strong><small>Penalità: -10 secondi e -100 punti.</small></div></li>
                     </ul>
 
+                    <div class="rules-section-title">Classifiche (Ranks)</div>
+                    <ul>
+                        <li><span class="icon rank-icon-s">S</span> <div class="rule-desc"><strong>Rango S</strong><small>10.000+ Punti</small></div></li>
+                        <li><span class="icon rank-icon-a">A</span> <div class="rule-desc"><strong>Rango A</strong><small>5.000 - 9.999 Punti</small></div></li>
+                        <li><span class="icon rank-icon-b">B</span> <div class="rule-desc"><strong>Rango B</strong><small>2.500 - 4.999 Punti</small></div></li>
+                        <li><span class="icon rank-icon-c">C</span> <div class="rule-desc"><strong>Rango C</strong><small>1.000 - 2.499 Punti</small></div></li>
+                    </ul>
+
                     <div class="rules-section-title">Modalità Arcade (Reverse)</div>
                     <ul>
                          <li><span class="icon">💣</span> <div class="rule-desc"><strong>TAGLIA LE BOMBE!</strong><small>Ti danno +0.5 secondo e punti.</small></div></li>
@@ -898,6 +906,14 @@
                         <li><span class="icon">💣</span> <div class="rule-desc"><strong>AVOID Bombs</strong><small>Penalty: -10 seconds and -100 points.</small></div></li>
                     </ul>
 
+                    <div class="rules-section-title">Ranking System</div>
+                    <ul>
+                        <li><span class="icon rank-icon-s">S</span> <div class="rule-desc"><strong>Rank S</strong><small>10,000+ Points</small></div></li>
+                        <li><span class="icon rank-icon-a">A</span> <div class="rule-desc"><strong>Rank A</strong><small>5,000 - 9,999 Points</small></div></li>
+                        <li><span class="icon rank-icon-b">B</span> <div class="rule-desc"><strong>Rank B</strong><small>2,500 - 4,999 Points</small></div></li>
+                        <li><span class="icon rank-icon-c">C</span> <div class="rule-desc"><strong>Rank C</strong><small>1,000 - 2,499 Points</small></div></li>
+                    </ul>
+
                     <div class="rules-section-title">Arcade Mode (Reverse)</div>
                     <ul>
                          <li><span class="icon">💣</span> <div class="rule-desc"><strong>SLICE BOMBS!</strong><small>Gain +0.5 second and points.</small></div></li>
@@ -930,7 +946,7 @@
         // OPTIMIZATION: Increased spawn rates slightly
         const GAME_CONFIG = {
             spawnRateStart: 40, // Was 50 - Faster start
-            bombChance: 0.35, 
+            bombChance: 0.25, 
             maxSpawnRate: 15 // Was 25 - Allow faster peak
         };
 
@@ -2188,7 +2204,18 @@
         window.addEventListener('mousemove', handleInputMove);
         window.addEventListener('mouseup', handleInputEnd);
         window.addEventListener('touchstart', handleInputStart, {passive: false});
-        window.addEventListener('touchmove', (e) => { e.preventDefault(); handleInputMove(e); }, {passive: false});
+        
+        // FIXED MOBILE SCROLLING ISSUE
+        // Don't prevent default behavior if interacting with overlays/rules
+        window.addEventListener('touchmove', (e) => { 
+            if (e.target.closest('.rules-wrapper') || e.target.closest('.overlay')) {
+                // Allow default scrolling behavior for UI elements
+                return;
+            }
+            e.preventDefault(); 
+            handleInputMove(e); 
+        }, {passive: false});
+        
         window.addEventListener('touchend', handleInputEnd);
 
         // --- ANIMATION ---
