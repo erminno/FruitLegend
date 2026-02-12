@@ -312,7 +312,7 @@
         .hidden { opacity: 0; pointer-events: none; }
 
         .logo-container {
-            position: relative; margin-bottom: 40px;
+            position: relative; margin-bottom: 30px;
             animation: float 4s ease-in-out infinite;
         }
 
@@ -350,7 +350,7 @@
 
         .menu-buttons {
             display: flex; flex-direction: column;
-            gap: 18px; width: 100%; max-width: 340px;
+            gap: 12px; width: 100%; max-width: 340px;
             align-items: center;
         }
 
@@ -392,6 +392,14 @@
             font-size: 1.2rem; padding: 14px 30px; width: 90%;
         }
         .btn.danger:active { box-shadow: 0 0 0 var(--btn-danger-shadow), inset 0 4px 8px rgba(0,0,0,0.2); }
+        
+        /* NEW BTN NEWS */
+        .btn.news {
+            background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%);
+            box-shadow: 0 6px 0 #6c3483, 0 15px 20px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3);
+            font-size: 1.1rem; padding: 12px 30px; width: 85%;
+        }
+        .btn.news:active { box-shadow: 0 0 0 #6c3483, inset 0 4px 8px rgba(0,0,0,0.2); }
 
         .btn.compact {
             width: auto; min-width: 120px; padding: 8px 20px;
@@ -561,6 +569,16 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
+        /* News Section */
+        .news-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px; border-radius: 15px; margin-bottom: 10px;
+            border-left: 4px solid var(--accent);
+        }
+        .news-date { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; display:block; }
+        .news-title { font-size: 1.1rem; color: #fff; margin-bottom: 5px; display:block; font-weight:bold; }
+        .news-text { font-size: 0.95rem; color: #ddd; line-height: 1.4; font-family: sans-serif; }
+
         /* Animations */
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
@@ -591,22 +609,25 @@
             </div>
             
             <div class="menu-buttons">
-                <button class="btn" id="btn-play" onclick="initGame('classic')">
+                <button class="btn" id="btn-play" onclick="playSound('click'); initGame('classic')">
                     <span class="btn-icon">⚔️</span> <span id="btn-text-play">GIOCA</span>
                 </button>
-                <button class="btn danger" id="btn-arcade" onclick="initGame('arcade')">
+                <button class="btn danger" id="btn-arcade" onclick="playSound('click'); initGame('arcade')">
                     <span class="btn-icon">💣</span> <span id="btn-text-arcade">ARCADE</span>
                 </button>
-                <button class="btn secondary" onclick="openProfile()">
+                <button class="btn news" id="btn-news" onclick="playSound('click'); openNews()">
+                    <span class="btn-icon">📰</span> <span id="btn-text-news">NOVITÀ</span>
+                </button>
+                <button class="btn secondary" onclick="playSound('click'); openProfile()">
                     <span class="btn-icon">🏆</span> <span id="btn-text-profile">PROFILO</span>
                 </button>
-                <button class="btn secondary" id="btn-custom" onclick="openCustomize()">
+                <button class="btn secondary" id="btn-custom" onclick="playSound('click'); openCustomize()">
                     <span class="btn-icon">🎨</span> CUSTOM
                 </button>
-                <button class="btn secondary" id="btn-rules" onclick="openRules()">
+                <button class="btn secondary" id="btn-rules" onclick="playSound('click'); openRules()">
                     <span class="btn-icon">📜</span> REGOLE
                 </button>
-                <button class="btn secondary" id="btn-settings" onclick="openSettings()">
+                <button class="btn secondary" id="btn-settings" onclick="playSound('click'); openSettings()">
                     <span class="btn-icon">⚙️</span> OPZIONI
                 </button>
             </div>
@@ -620,7 +641,34 @@
                     <!-- Content injected via JS -->
                 </div>
             </div>
-            <button class="btn secondary compact" onclick="closeRules()" id="rules-close-btn">INDIETRO</button>
+            <button class="btn secondary compact" onclick="playSound('click'); closeRules()" id="rules-close-btn">INDIETRO</button>
+        </div>
+        
+        <!-- News Screen -->
+        <div id="news-screen" class="overlay hidden">
+            <h2>NOVITÀ</h2>
+            <div class="rules-wrapper" style="width:100%; max-width:400px;">
+                <div class="news-item">
+                    <span class="news-date">Versione 2.0</span>
+                    <span class="news-title">Ottimizzazione Mobile & Fisica</span>
+                    <span class="news-text">
+                        - 🚀 Lancio frutta rallentato per più controllo.<br>
+                        - ⚖️ Gravità aumentata: più pesante e realistico.<br>
+                        - 📱 Ottimizzazione prestazioni per telefoni.<br>
+                        - 🔊 Aggiunti suoni tasti UI.
+                    </span>
+                </div>
+                <div class="news-item">
+                    <span class="news-date">Versione 1.5</span>
+                    <span class="news-title">Classifiche e Nuovi Frutti</span>
+                    <span class="news-text">
+                        - Aggiunti Ranghi (S, A, B, C).<br>
+                        - Nuovi frutti: Pera (pulizia) e Melone (esplosivo).<br>
+                        - Pomodoro Neon: Attenzione agli schizzi!
+                    </span>
+                </div>
+            </div>
+            <button class="btn secondary compact" onclick="playSound('click'); closeNews()">INDIETRO</button>
         </div>
 
         <!-- Profile Screen -->
@@ -663,7 +711,7 @@
                     <span class="stat-name" id="label-bombs">Bombe Esplose</span>
                 </div>
             </div>
-            <button class="btn secondary compact" onclick="closeProfile()" id="profile-close-btn">INDIETRO</button>
+            <button class="btn secondary compact" onclick="playSound('click'); closeProfile()" id="profile-close-btn">INDIETRO</button>
         </div>
 
         <!-- Customize Screen -->
@@ -684,12 +732,12 @@
                         <div class="color-opt" style="background:#ff9ff3;" data-color="#ff9ff3"></div>
                         <div class="color-opt" style="background:#00ffff;" data-color="#00ffff"></div>
                         
-                        <!-- New 5 Colors -->
-                        <div class="color-opt" style="background:#ff5722;" data-color="#ff5722" title="Neon Orange"></div>
-                        <div class="color-opt" style="background:#76ff03;" data-color="#76ff03" title="Lime Green"></div>
-                        <div class="color-opt" style="background:#3d5afe;" data-color="#3d5afe" title="Indigo"></div>
-                        <div class="color-opt" style="background:#b0bec5;" data-color="#b0bec5" title="Silver"></div>
-                        <div class="color-opt" style="background:#ff00ff;" data-color="#ff00ff" title="Hot Pink"></div>
+                        <!-- New 5 Colors (Tradotti in italiano nel title) -->
+                        <div class="color-opt" style="background:#ff5722;" data-color="#ff5722" title="Arancio Neon"></div>
+                        <div class="color-opt" style="background:#76ff03;" data-color="#76ff03" title="Verde Lime"></div>
+                        <div class="color-opt" style="background:#3d5afe;" data-color="#3d5afe" title="Indaco"></div>
+                        <div class="color-opt" style="background:#b0bec5;" data-color="#b0bec5" title="Argento"></div>
+                        <div class="color-opt" style="background:#ff00ff;" data-color="#ff00ff" title="Rosa Acceso"></div>
                         
                         <div class="color-opt" style="background:linear-gradient(45deg, red, yellow, blue);" data-color="rainbow"></div>
                     </div>
@@ -706,17 +754,17 @@
                         <div class="color-opt" style="background:#ff7e5f;" onclick="setBg('sunset')"></div>
                         <div class="color-opt" style="background:#2e7d32;" onclick="setBg('forest')"></div>
                         
-                        <!-- New 5 Backgrounds -->
-                        <div class="color-opt" style="background:linear-gradient(135deg, #0288d1, #01579b);" onclick="setBg('ocean')" title="Ocean"></div>
-                        <div class="color-opt" style="background:linear-gradient(135deg, #bf360c, #3e2723);" onclick="setBg('volcano')" title="Volcano"></div>
-                        <div class="color-opt" style="background:linear-gradient(135deg, #b2ebf2, #00bcd4);" onclick="setBg('ice')" title="Ice"></div>
-                        <div class="color-opt" style="background:linear-gradient(135deg, #ffcc80, #e65100);" onclick="setBg('desert')" title="Desert"></div>
-                        <div class="color-opt" style="background:linear-gradient(135deg, #7b1fa2, #000000);" onclick="setBg('galaxy')" title="Galaxy"></div>
+                        <!-- New 5 Backgrounds (Tradotti in italiano nel title) -->
+                        <div class="color-opt" style="background:linear-gradient(135deg, #0288d1, #01579b);" onclick="setBg('ocean')" title="Oceano"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #bf360c, #3e2723);" onclick="setBg('volcano')" title="Vulcano"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #b2ebf2, #00bcd4);" onclick="setBg('ice')" title="Ghiaccio"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #ffcc80, #e65100);" onclick="setBg('desert')" title="Deserto"></div>
+                        <div class="color-opt" style="background:linear-gradient(135deg, #7b1fa2, #000000);" onclick="setBg('galaxy')" title="Galassia"></div>
                     </div>
                 </div>
             </div>
 
-            <button class="btn secondary compact" id="cust-close-btn" onclick="closeCustomize()">INDIETRO</button>
+            <button class="btn secondary compact" id="cust-close-btn" onclick="playSound('click'); closeCustomize()">INDIETRO</button>
         </div>
 
         <!-- Game Over Screen -->
@@ -735,7 +783,7 @@
                 <div id="best-score" style="color:#2ecc71; margin-bottom: 20px; font-size: 1.1rem;"></div>
                 
                 <div class="menu-buttons" style="width: 100%;">
-                    <button class="btn" id="game-over-retry-btn" onclick="resetGame()">MENU</button>
+                    <button class="btn" id="game-over-retry-btn" onclick="playSound('click'); resetGame()">MENU</button>
                 </div>
             </div>
         </div>
@@ -759,6 +807,14 @@
                         <input type="checkbox" id="perf-mode-check">
                     </div>
                 </div>
+                <!-- Entity Limit Toggle (New) -->
+                <div class="setting-panel">
+                    <span class="setting-label" id="settings-limit-label">Limite Entità</span>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                        <span style="color: #fff; font-size: 1rem; opacity: 0.8;" id="settings-limit-desc">Max 16 Frutti a schermo</span>
+                        <input type="checkbox" id="limit-mode-check">
+                    </div>
+                </div>
                 <!-- High Gravity Mode (Slow Motion) -->
                 <div class="setting-panel">
                     <span class="setting-label" id="settings-gravity-label">Gravità Alta</span>
@@ -768,17 +824,21 @@
                     </div>
                 </div>
             </div>
-            <button class="btn secondary compact" id="settings-close-btn" onclick="closeSettings()">SALVA & ESCI</button>
+            <button class="btn secondary compact" id="settings-close-btn" onclick="playSound('click'); closeSettings()">SALVA & ESCI</button>
         </div>
     </div>
 
     <script>
-        // --- LOCALIZZAZIONE DEL TESTO ---
+        // --- RILEVAMENTO MOBILE ---
+        const isMobile = window.innerWidth <= 768;
+
+        // --- LOCALIZZAZIONE DEL TESTO (AGGIORNATA CON TRADUZIONI MANCANTI) ---
         const localStrings = {
             'it': {
                 TITLE: 'FRUIT LEGEND',
                 BUTTON_PLAY: 'GIOCA',
                 BUTTON_ARCADE: 'ARCADE',
+                BUTTON_NEWS: 'NOVITÀ',
                 BUTTON_PROFILE: 'PROFILO',
                 BUTTON_CUSTOM: 'CUSTOM',
                 BUTTON_RETRY: 'MENU',
@@ -792,7 +852,9 @@
                 RANK_LABEL: 'RANGO',
                 SETTINGS_TITLE: 'OPZIONI',
                 SETTINGS_PERF_LABEL: 'Modalità Performance',
-                SETTINGS_PERF_DESC: 'No Splash/Scritte (Max 16 Entità)',
+                SETTINGS_PERF_DESC: 'No Splash/Scritte',
+                SETTINGS_LIMIT_LABEL: 'Limite Entità (Low)',
+                SETTINGS_LIMIT_DESC: 'Max 16 Frutti a schermo',
                 SETTINGS_GRAVITY_LABEL: 'Gravità Alta',
                 SETTINGS_GRAVITY_DESC: 'Rallenta Frutta (Mobile)',
                 LANGUAGE: 'Lingua:',
@@ -809,7 +871,7 @@
                 LABEL_MAX_RANK: 'Rango Max',
                 LABEL_LAST_RANK: 'Ultimo Rango',
                 LABEL_BOMBS: 'Bombe Esplose',
-                FREEZE_TEXT: "FREEZE!",
+                FREEZE_TEXT: "CONGELATO!",
                 FRENZY_TEXT: "BLITZ!",
                 CRITICAL_TEXT: "CRITICO!",
                 DRAGON_TEXT: "DRAGO!",
@@ -822,6 +884,14 @@
                 BOMB_PENALTY: "-100 PT",
                 TIME_PENALTY: "-10 SEC",
                 RULES_TITLE: 'REGOLE DI GIOCO',
+                // Nuove stringhe tradotte
+                DOUBLE_POINTS: "PUNTI DOPPI!",
+                BOMBS_CLEARED: "BOMBE DISTRUTTE!",
+                SAFE_AREA: "AREA SICURA!",
+                MELON_BLAST: "ESPLOSIONE MELONE!",
+                BOOM_TEXT: "BOOM!",
+                SEC_ABBR: "s", // per +5s, +10s
+                COMBO_TEXT: "COMBO!",
                 RULES_CONTENT: `
                     <div class="rules-section-title">Base</div>
                     <ul>
@@ -867,6 +937,7 @@
                 TITLE: 'FRUIT LEGEND',
                 BUTTON_PLAY: 'PLAY',
                 BUTTON_ARCADE: 'ARCADE',
+                BUTTON_NEWS: 'NEWS',
                 BUTTON_PROFILE: 'PROFILE',
                 BUTTON_CUSTOM: 'CUSTOM',
                 BUTTON_RETRY: 'MENU',
@@ -880,7 +951,9 @@
                 RANK_LABEL: 'RANK',
                 SETTINGS_TITLE: 'OPTIONS',
                 SETTINGS_PERF_LABEL: 'Performance Mode',
-                SETTINGS_PERF_DESC: 'No Splash/Text (Max 16 Entities)',
+                SETTINGS_PERF_DESC: 'No Splash/Text',
+                SETTINGS_LIMIT_LABEL: 'Entity Limit (Low)',
+                SETTINGS_LIMIT_DESC: 'Max 16 Fruits on screen',
                 SETTINGS_GRAVITY_LABEL: 'High Gravity',
                 SETTINGS_GRAVITY_DESC: 'Slows down fruits (Mobile)',
                 LANGUAGE: 'Language',
@@ -910,6 +983,14 @@
                 BOMB_PENALTY: "-100 PTS",
                 TIME_PENALTY: "-10 SEC",
                 RULES_TITLE: 'GAME RULES',
+                // New Keys for EN
+                DOUBLE_POINTS: "DOUBLE POINTS!",
+                BOMBS_CLEARED: "BOMBS CLEARED!",
+                SAFE_AREA: "SAFE AREA!",
+                MELON_BLAST: "MELON BLAST!",
+                BOOM_TEXT: "BOOM!",
+                SEC_ABBR: "s",
+                COMBO_TEXT: "COMBO!",
                 RULES_CONTENT: `
                     <div class="rules-section-title">Basics</div>
                     <ul>
@@ -922,7 +1003,7 @@
                     <ul>
                         <li><span class="icon rank-icon-s">S</span> <div class="rule-desc"><strong>Rank S</strong><small>10,000+ Points</small></div></li>
                         <li><span class="icon rank-icon-a">A</span> <div class="rule-desc"><strong>Rank A</strong><small>5,000 - 9,999 Points</small></div></li>
-                        <li><span class="icon rank-icon-b">B</span> <div class="rule-desc"><strong>Rank B</strong><small>2,500 - 4,999 Points</small></div></li>
+                        <li><span class="icon rank-icon-b">B</span> <div class="rule-desc"><strong>Rank B</strong><small>2,500 - 4.999 Points</small></div></li>
                         <li><span class="icon rank-icon-c">C</span> <div class="rule-desc"><strong>Rank C</strong><small>1,000 - 2,499 Points</small></div></li>
                     </ul>
 
@@ -938,7 +1019,7 @@
                         <li><span class="icon">🍐</span> <div class="rule-desc"><strong>Pear</strong><small>Purify! Destroys all bombs.</small></div></li>
                         <li><span class="icon">🍹</span> <div class="rule-desc"><strong>Drink</strong><small>20 hits! +10 Secondi extra.</small></div></li>
                         <li><span class="icon">🍒</span> <div class="rule-desc"><strong>Berries</strong><small>Small but valuable. 20 points.</small></div></li>
-                        <li><span class="icon">🍏</span> <div class="rule-desc"><strong>Gold Apple</strong><small>Special! +5 seconds.</small></div></li>
+                        <li><span class="icon">🍏</span> <div class="rule-desc"><strong>Gold Apple</strong><small>Special! +5 secondi.</small></div></li>
                         <li><span class="icon" style="text-shadow: 0 0 10px red;">🍅</span> <div class="rule-desc"><strong>Neon Tomato</strong><small>Splat! 150 pts but obscures screen.</small></div></li>
                     </ul>
 
@@ -954,25 +1035,21 @@
         };
 
         // --- SINGLE DIFFICULTY MODE CONFIGURATION ---
-        // Unified difficulty with high bomb chance (35%)
-        // OPTIMIZATION: Increased spawn rates slightly
         const GAME_CONFIG = {
-            spawnRateStart: 40, // Was 50 - Faster start
+            spawnRateStart: 40,
             bombChance: 0.25, 
-            maxSpawnRate: 15 // Was 25 - Allow faster peak
+            maxSpawnRate: 15
         };
 
         let currentLang = localStorage.getItem('gameLanguage') || 'it';
-        // Performance Mode Setting
         let performanceMode = localStorage.getItem('performanceMode') === 'true';
-        // Gravity Mode Setting (Slow Motion)
         let highGravityMode = localStorage.getItem('highGravityMode') === 'true';
+        let lowEntityMode = localStorage.getItem('lowEntityMode') === 'true';
 
         let bladeColor = '#fff';
         let currentGameMode = 'classic'; // 'classic' or 'arcade'
 
         // --- STATS PROFILO ---
-        // Added maxRank and lastRank
         let userStats = JSON.parse(localStorage.getItem('fruitNinjaStats')) || {
             gamesPlayed: 0,
             bestScore: 0,
@@ -983,7 +1060,6 @@
             bombsExploded: 0
         };
 
-        // Migration for old stats without ranks
         if(!userStats.maxRank) userStats.maxRank = 'NONE';
         if(!userStats.lastRank) userStats.lastRank = '-';
         if(!userStats.bombsExploded) userStats.bombsExploded = 0;
@@ -1003,6 +1079,7 @@
             // Menu Buttons
             document.getElementById('btn-text-play').innerText = strings.BUTTON_PLAY;
             document.getElementById('btn-text-arcade').innerText = strings.BUTTON_ARCADE;
+            document.getElementById('btn-text-news').innerText = strings.BUTTON_NEWS;
             document.getElementById('btn-text-profile').innerText = strings.BUTTON_PROFILE;
             document.getElementById('btn-custom').lastChild.textContent = " " + strings.BUTTON_CUSTOM;
             document.getElementById('btn-rules').lastChild.textContent = " " + strings.BUTTON_RULES;
@@ -1044,6 +1121,8 @@
             document.getElementById('settings-lang-label').innerText = strings.LANGUAGE;
             document.getElementById('settings-perf-label').innerText = strings.SETTINGS_PERF_LABEL;
             document.getElementById('settings-perf-desc').innerText = strings.SETTINGS_PERF_DESC;
+            document.getElementById('settings-limit-label').innerText = strings.SETTINGS_LIMIT_LABEL;
+            document.getElementById('settings-limit-desc').innerText = strings.SETTINGS_LIMIT_DESC;
             document.getElementById('settings-gravity-label').innerText = strings.SETTINGS_GRAVITY_LABEL;
             document.getElementById('settings-gravity-desc').innerText = strings.SETTINGS_GRAVITY_DESC;
             document.getElementById('settings-close-btn').innerText = strings.SAVE_CLOSE;
@@ -1067,6 +1146,13 @@
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(600, now);
                 osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'click') { // NEW BUTTON SOUND
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
                 gainNode.gain.setValueAtTime(0.1, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(now); osc.stop(now + 0.1);
@@ -1156,7 +1242,6 @@
                 gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
                 osc.start(now); osc.stop(now + 0.3);
             } else if (type === 'time-penalty') {
-                // Low pitch thud
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(150, now);
                 osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
@@ -1179,6 +1264,7 @@
         const customizeScreen = document.getElementById('customize-screen');
         const profileScreen = document.getElementById('profile-screen');
         const rulesScreen = document.getElementById('rules-screen');
+        const newsScreen = document.getElementById('news-screen');
         const bestScoreEl = document.getElementById('best-score');
         const homeBtn = document.getElementById('game-home-btn');
         const scoreBoxContainer = document.getElementById('score-box-container');
@@ -1303,7 +1389,7 @@
                     this.icon = type.icon;
                     this.color = type.color;
                     this.radius = 35;
-                    this.gravity = 0.25;
+                    this.gravity = 0.35; // Slight boost
 
                     this.x = Math.random() > 0.5 ? 0 : width; 
                     this.y = Math.random() * (height / 2) + height/2;
@@ -1316,19 +1402,30 @@
                     const dirX = (width / 2) - this.x;
                     this.vx = (dirX * 0.01) + (Math.random() - 0.5) * 2; 
                     
-                    // --- PHYSICS ADJUSTMENT FOR MOBILE ---
-                    let baseVyMin = 13;
-                    let baseVyMax = 18; // 13+5
+                    // --- PHYSICS ADJUSTMENT (MOBILE OPTIMIZED) ---
+                    // Default values (Mobile)
+                    let baseVyMin = 16;  // Was 11 - Increased to reach higher
+                    let baseVyMax = 20;  // Was 15 - Increased
+                    
+                    // PC Logic
+                    if (!isMobile) {
+                        baseVyMin = 17;
+                        baseVyMax = 22;
+                    }
                     
                     if (isPortrait) {
-                        // Boost vertical velocity by ~25% if portrait to reach higher
-                        baseVyMin = 16;
-                        baseVyMax = 22;
+                        // Even higher for portrait mode (mostly mobile phones)
+                        baseVyMin = 18; // Was 13
+                        baseVyMax = 23; // Was 18
                     }
                     
                     this.vy = -(Math.random() * (baseVyMax - baseVyMin) + baseVyMin); 
                     
-                    this.gravity = 0.25;
+                    // --- GRAVITY ADJUSTMENT (HEAVIER) ---
+                    // Old: 0.25
+                    // New: 0.40 (or 0.45 on mobile)
+                    this.gravity = isMobile ? 0.45 : 0.40;
+                    
                     this.radius = 35;
 
                     if (forceType === 'berry') {
@@ -1342,7 +1439,6 @@
 
                     const rand = Math.random();
                     
-                    // ARCADE MODE SPAWN LOGIC
                     if (currentGameMode === 'arcade') {
                          if (rand < 0.60) { 
                             this.type = 'bomb';
@@ -1355,8 +1451,6 @@
                             this.color = type.color;
                          }
                     } else {
-                        // CLASSIC SPAWN LOGIC (MODIFIED for more bombs)
-                        // Uses the global bombChance which is now 0.35 (35%)
                         if (rand < bombChance) { 
                             this.type = 'bomb';
                             this.icon = '💣';
@@ -1377,7 +1471,7 @@
                             this.color = '#00bfff';
                             this.radius = 40;
                         } else if (rand > 0.95 && rand <= 0.965) { 
-                            this.type = 'tomato'; // NEON TOMATO
+                            this.type = 'tomato'; 
                             this.icon = '🍅';
                             this.color = '#ff10f0'; 
                             this.radius = 40;
@@ -1396,7 +1490,7 @@
                             this.icon = '🍹';
                             this.color = '#00CED1'; 
                             this.radius = 40;
-                            this.hp = 20; // MODIFIED: Requires 20 hits now
+                            this.hp = 20; 
                         } 
                         else if (rand > 0.885 && rand <= 0.91) { 
                             this.type = 'melon'; 
@@ -1425,7 +1519,6 @@
                             this.color = '#ff9800';
                             this.radius = 40;
                         } else {
-                            // Standard fruit range is squeezed because bombChance took more of the 0-1 range
                             this.type = 'fruit';
                             const type = FRUITS_DATA[Math.floor(Math.random() * FRUITS_DATA.length)];
                             this.icon = type.icon;
@@ -1436,16 +1529,15 @@
             }
 
             update() {
-                // HIGH GRAVITY MODE: Applies a drag factor (slows everything down)
-                // If ON: 0.75x speed. If OFF: 1.0x speed.
-                const speedMod = highGravityMode ? 0.75 : 1.0;
+                // Slower setting (was 0.75, now 0.60 for clearer effect)
+                const speedMod = highGravityMode ? 0.60 : 1.0; 
 
                 this.x += this.vx * timeScale * speedMod;
                 this.y += this.vy * timeScale * speedMod;
                 this.vy += this.gravity * timeScale * speedMod; 
                 this.rotation += this.rotSpeed * timeScale * speedMod;
 
-                if (this.type === 'mega' || this.type === 'melon') this.vy += 0.05 * timeScale * speedMod; // Heavies fall faster
+                if (this.type === 'mega' || this.type === 'melon') this.vy += 0.05 * timeScale * speedMod;
 
                 if (this.y > height + 150 || this.x < -100 || this.x > width + 100) {
                     this.active = false;
@@ -1453,44 +1545,52 @@
             }
 
             draw() {
+                // MOBILE OPTIMIZATION: Skip drawing if off screen
+                if (this.y > height + 60 && this.vy > 0) return;
+
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rotation);
                 
-                // SHADOWS & GLOWS
-                if (this.type === 'dragon') {
-                    ctx.shadowColor = this.color;
-                    ctx.shadowBlur = 30; 
-                } else if (this.type === 'rainbow' || this.type === 'star' || this.type === 'boom') {
-                    const hue = (Date.now() / 5) % 360;
-                    if (this.type === 'star') ctx.shadowColor = '#FFD700';
-                    else if (this.type === 'boom') ctx.shadowColor = '#FF4500';
-                    else ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
-                    ctx.shadowBlur = 25;
-                } else if (this.type === 'tomato') {
-                    ctx.shadowColor = '#ff0000';
-                    ctx.shadowBlur = 40; 
-                } else if (['gold', 'frenzy', 'freeze', 'avocado', 'drink'].includes(this.type)) {
-                    ctx.shadowColor = this.color;
-                    ctx.shadowBlur = 20;
-                } else {
-                    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                    ctx.shadowBlur = 10;
+                // SHADOWS & GLOWS (Reduced on Mobile)
+                if (!isMobile) {
+                    if (this.type === 'dragon') {
+                        ctx.shadowColor = this.color;
+                        ctx.shadowBlur = 30; 
+                    } else if (this.type === 'rainbow' || this.type === 'star' || this.type === 'boom') {
+                        const hue = (Date.now() / 5) % 360;
+                        if (this.type === 'star') ctx.shadowColor = '#FFD700';
+                        else if (this.type === 'boom') ctx.shadowColor = '#FF4500';
+                        else ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                        ctx.shadowBlur = 25;
+                    } else if (this.type === 'tomato') {
+                        ctx.shadowColor = '#ff0000';
+                        ctx.shadowBlur = 40; 
+                    } else if (['gold', 'frenzy', 'freeze', 'avocado', 'drink'].includes(this.type)) {
+                        ctx.shadowColor = this.color;
+                        ctx.shadowBlur = 20;
+                    } else {
+                        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                        ctx.shadowBlur = 10;
+                    }
                 }
 
                 let size = 60;
                 if (this.type === 'mega') size = 140;
-                if (this.type === 'melon') size = 90; // Big melon
+                if (this.type === 'melon') size = 90;
                 if (this.type === 'dragon') size = 80;
                 if (['rainbow', 'star', 'boom'].includes(this.type)) size = 70;
-                if (this.type === 'berry') size = 40; // Small berry
+                if (this.type === 'berry') size = 40;
 
                 ctx.font = `${size}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                if (this.type === 'gold') ctx.filter = 'sepia(100%) saturate(300%) hue-rotate(50deg)';
-                if (this.type === 'tomato') ctx.filter = 'brightness(1.5) contrast(1.2)'; // Neon filter
+                // MOBILE OPTIMIZATION: Disable expensive filters
+                if (!isMobile) {
+                    if (this.type === 'gold') ctx.filter = 'sepia(100%) saturate(300%) hue-rotate(50deg)';
+                    if (this.type === 'tomato') ctx.filter = 'brightness(1.5) contrast(1.2)';
+                }
                 
                 ctx.fillText(this.icon, 0, 5);
                 
@@ -1620,14 +1720,20 @@
             currentMaxCombo = 0;
             
             // USE UNIFIED CONFIG
-            spawnRate = GAME_CONFIG.spawnRateStart;
+            if (isMobile) {
+                spawnRate = 60; // Slower start on mobile (higher number = slower)
+                maxSpawnRate = 30; // Doesn't get too fast
+            } else {
+                spawnRate = GAME_CONFIG.spawnRateStart; // 40
+                maxSpawnRate = GAME_CONFIG.maxSpawnRate; // 15
+            }
+            
             bombChance = GAME_CONFIG.bombChance;
-            maxSpawnRate = GAME_CONFIG.maxSpawnRate;
 
             // Adjust spawn for arcade
             if (currentGameMode === 'arcade') {
                 gameContainer.classList.add('mode-arcade');
-                spawnRate = 28;
+                if (!isMobile) spawnRate = 28;
             } else {
                 gameContainer.classList.remove('mode-arcade');
             }
@@ -1646,6 +1752,7 @@
             customizeScreen.classList.add('hidden');
             profileScreen.classList.add('hidden');
             rulesScreen.classList.add('hidden');
+            newsScreen.classList.add('hidden');
             gameContainer.classList.remove('frozen');
             scoreBoxContainer.classList.remove('active-2x');
             
@@ -1686,7 +1793,6 @@
             document.getElementById('final-score').innerText = score;
             gameContainer.classList.remove('frozen');
             
-            // Only update stats if CLASSIC mode
             const currentRank = calculateRank(score);
             
             if (currentGameMode === 'classic') {
@@ -1726,7 +1832,14 @@
         }
 
         function createParticles(x, y, color, isSparkle = false) {
-            const count = isSparkle ? 25 : 12;
+            // MOBILE OPTIMIZATION: Drastically reduce particles
+            let count;
+            if (isMobile) {
+                count = isSparkle ? 8 : 4; 
+            } else {
+                count = isSparkle ? 25 : 12;
+            }
+
             for(let i=0; i<count; i++) {
                 let pColor = color;
                 if (color === 'rainbow') {
@@ -1751,14 +1864,15 @@
         }
 
         function activateStar() {
+            const strings = getStrings();
             starTimer = 360;
-            if(!performanceMode) floaters.push(new Floater(width/2, height/2, "DOUBLE POINTS!", "#FFFF00"));
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, strings.DOUBLE_POINTS, "#FFFF00"));
             scoreBoxContainer.classList.add('active-2x');
             playSound('star');
         }
 
         function activatePearCleanse() {
-            // Clears all bombs
+            const strings = getStrings();
             let bombsRemoved = 0;
             entities.forEach(ent => {
                 if (ent.active && ent.type === 'bomb') {
@@ -1769,17 +1883,16 @@
             });
             flashGreen();
             playSound('pear');
-            const msg = bombsRemoved > 0 ? "BOMBS CLEARED!" : "SAFE AREA!";
+            const msg = bombsRemoved > 0 ? strings.BOMBS_CLEARED : strings.SAFE_AREA;
             if(!performanceMode) floaters.push(new Floater(width/2, height/2, msg, "#d1e231"));
         }
 
         function activateMelonSplash(x, y) {
-            // UPDATED: Now clears screen like Boom! but with Green effects
+            const strings = getStrings();
             createParticles(x, y, '#90ee90', true);
             shakeScreen(30);
             playSound('melon');
             
-            // Global green flash
             const flash = document.createElement('div');
             flash.style.position = 'absolute';
             flash.style.inset = '0';
@@ -1792,24 +1905,23 @@
             setTimeout(() => { flash.style.opacity = '0'; setTimeout(() => flash.remove(), 500); }, 50);
             
             let killCount = 0;
-            // Iterate ALL entities (global) like Boom
             entities.forEach(ent => {
-                // Destroy everything except bombs and the melon itself (avoid recursion)
                 if (ent.active && ent.type !== 'bomb' && ent.type !== 'melon') {
-                    destroyEntity(ent, true); // Force kill
+                    destroyEntity(ent, true);
                     killCount++;
                 }
             });
             
             if (killCount > 0) {
-                 if(!performanceMode) floaters.push(new Floater(width/2, height/2, `MELON BLAST! +${killCount*50}`, "#90ee90"));
+                 if(!performanceMode) floaters.push(new Floater(width/2, height/2, `${strings.MELON_BLAST} +${killCount*50}`, "#90ee90"));
                  score += killCount * 50;
                  scoreVal.innerText = score;
             }
         }
 
         function activateBoom() {
-            if(!performanceMode) floaters.push(new Floater(width/2, height/2, "BOOM!", "#FF4500"));
+            const strings = getStrings();
+            if(!performanceMode) floaters.push(new Floater(width/2, height/2, strings.BOOM_TEXT, "#FF4500"));
             shakeScreen(30);
             playSound('boom');
             
@@ -1834,27 +1946,22 @@
         function destroyEntity(ent, forceKill = false) {
              const strings = getStrings();
              
-             // --- ARCADE MODE LOGIC (MODIFICATA) ---
              if (currentGameMode === 'arcade') {
                  if (ent.type === 'bomb') {
-                     // BOMB IS GOOD IN ARCADE
                      ent.active = false;
                      playSound('slice');
                      createParticles(ent.x, ent.y, '#333', true);
-                     createParticles(ent.x, ent.y, '#ffd700', true); // Golden sparks
+                     createParticles(ent.x, ent.y, '#ffd700', true); 
                      
-                     // MODIFIED: +0.5 Seconds
                      gameTime += 0.5;
                      score += 10;
                      scoreVal.innerText = score;
                      if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, strings.TIME_ARCADE_BONUS, '#2ecc71'));
                      
                  } else {
-                     // FRUITS ARE BAD IN ARCADE
                      ent.active = false;
                      playSound('thud');
                      
-                     // MODIFIED: -10 Seconds
                      gameTime -= 10;
                      
                      shakeScreen(5);
@@ -1865,7 +1972,6 @@
                  return;
              }
 
-             // --- CLASSIC MODE LOGIC ---
              if (ent.type === 'mega' && !forceKill) {
                 ent.hp--;
                 createParticles(ent.x, ent.y, '#e74c3c', true);
@@ -1891,14 +1997,13 @@
             ent.active = false;
 
             if (ent.type === 'bomb') {
-                // MODIFIED: If frozen, bomb gives points!
                 if(!forceKill) {
                     if (freezeTimer > 0) {
                         playSound('ice-break');
                         score += 50;
                         scoreVal.innerText = score;
                         if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+50", '#00bfff'));
-                        createParticles(ent.x, ent.y, '#a0e6ff', true); // Ice particles
+                        createParticles(ent.x, ent.y, '#a0e6ff', true);
                         createParticles(ent.x, ent.y, '#fff', true);
                     } else {
                         playSound('boom');
@@ -1920,14 +2025,14 @@
             } else if (ent.type === 'gold') {
                 playSound('bonus');
                 gameTime += 5;
-                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+5s", '#ffd700'));
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, `+5${strings.SEC_ABBR}`, '#ffd700'));
                 score += (starTimer > 0 ? 100 : 50); 
                 scoreVal.innerText = score;
                 createParticles(ent.x, ent.y, '#ffd700', true);
 
             } else if (ent.type === 'tomato') { 
                 playSound('tomato');
-                splatScreen(); // Red splat - has check inside
+                splatScreen(); 
                 const pts = starTimer > 0 ? 300 : 150;
                 if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, `+${pts}`, '#ff10f0'));
                 score += pts;
@@ -1937,7 +2042,7 @@
             } else if (ent.type === 'avocado') { 
                 playSound('avocado');
                 gameTime += 3;
-                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+3s", '#568203'));
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, `+3${strings.SEC_ABBR}`, '#568203'));
                 const pts = starTimer > 0 ? 400 : 200;
                 score += pts;
                 scoreVal.innerText = score;
@@ -1946,7 +2051,7 @@
             } else if (ent.type === 'drink') { 
                 playSound('drink');
                 gameTime += 10; 
-                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, "+10s", '#00CED1'));
+                if(!performanceMode) floaters.push(new Floater(ent.x, ent.y, `+10${strings.SEC_ABBR}`, '#00CED1'));
                 const pts = starTimer > 0 ? 400 : 200;
                 score += pts;
                 scoreVal.innerText = score;
@@ -2041,7 +2146,7 @@
                         setTimeout(() => gameContainer.style.transform = 'scale(1)', 50);
                         
                         if(!performanceMode) {
-                            floaters.push(new Floater(ent.x, ent.y - 50, `x${comboCount} COMBO!`, '#f1c40f'));
+                            floaters.push(new Floater(ent.x, ent.y - 50, `x${comboCount} ${strings.COMBO_TEXT}`, '#f1c40f'));
                         }
                         
                         playSound('combo');
@@ -2092,19 +2197,17 @@
         }
 
         function openProfile() {
-            // Update stats including new Ranks
             document.getElementById('stat-games').innerText = userStats.gamesPlayed;
             document.getElementById('stat-best').innerText = userStats.bestScore;
             document.getElementById('stat-total-score').innerText = userStats.totalScore;
             document.getElementById('stat-max-combo').innerText = userStats.maxCombo;
-            document.getElementById('stat-bombs-exploded').innerText = userStats.bombsExploded; // NEW
+            document.getElementById('stat-bombs-exploded').innerText = userStats.bombsExploded; 
 
             // New Ranks
             const maxRankEl = document.getElementById('stat-max-rank');
             maxRankEl.innerText = userStats.maxRank;
-            maxRankEl.className = `rank-card-val rank-${userStats.maxRank}`; // Add color class
+            maxRankEl.className = `rank-card-val rank-${userStats.maxRank}`; 
             
-            // Update Max Rank Card Style
             const maxRankCard = document.querySelector('.rank-card.max-rank');
             maxRankCard.style.borderColor = `var(--rank-${userStats.maxRank.toLowerCase()})`;
             
@@ -2120,6 +2223,16 @@
             profileScreen.classList.add('hidden');
             startScreen.classList.remove('hidden');
         }
+        
+        function openNews() {
+            startScreen.classList.add('hidden');
+            newsScreen.classList.remove('hidden');
+        }
+        
+        function closeNews() {
+            newsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
 
         function openRules() {
             startScreen.classList.add('hidden');
@@ -2133,6 +2246,7 @@
 
         document.querySelectorAll('#blade-colors .color-opt').forEach(el => {
             el.addEventListener('click', function() {
+                playSound('click');
                 document.querySelectorAll('#blade-colors .color-opt').forEach(d => d.classList.remove('selected'));
                 this.classList.add('selected');
                 bladeColor = this.getAttribute('data-color');
@@ -2140,6 +2254,7 @@
         });
 
         function setBg(type) {
+             playSound('click');
              gameContainer.className = '';
              if (type === 'default') {
                  gameContainer.classList.add('bg-default');
@@ -2154,17 +2269,16 @@
             startScreen.classList.add('hidden');
             gameOverScreen.classList.add('hidden');
             document.getElementById('language-selector').value = currentLang;
-            // Set Checkbox State
             document.getElementById('perf-mode-check').checked = performanceMode;
+            document.getElementById('limit-mode-check').checked = lowEntityMode;
             document.getElementById('gravity-mode-check').checked = highGravityMode;
-            
             settingsScreen.classList.remove('hidden');
         }
 
         function closeSettings() {
             const newLang = document.getElementById('language-selector').value;
-            // Get Checkbox State
             const newPerfMode = document.getElementById('perf-mode-check').checked;
+            const newLimitMode = document.getElementById('limit-mode-check').checked;
             const newGravityMode = document.getElementById('gravity-mode-check').checked;
             
             if (newLang !== currentLang) {
@@ -2176,6 +2290,11 @@
             if (newPerfMode !== performanceMode) {
                 performanceMode = newPerfMode;
                 localStorage.setItem('performanceMode', newPerfMode);
+            }
+
+            if (newLimitMode !== lowEntityMode) {
+                lowEntityMode = newLimitMode;
+                localStorage.setItem('lowEntityMode', newLimitMode);
             }
             
             if (newGravityMode !== highGravityMode) {
@@ -2189,7 +2308,7 @@
 
         // --- INPUT ---
         function handleInputStart(e) {
-            if (settingsScreen.classList.contains('hidden') && customizeScreen.classList.contains('hidden') && profileScreen.classList.contains('hidden') && rulesScreen.classList.contains('hidden')) { 
+            if (settingsScreen.classList.contains('hidden') && customizeScreen.classList.contains('hidden') && profileScreen.classList.contains('hidden') && rulesScreen.classList.contains('hidden') && newsScreen.classList.contains('hidden')) { 
                 mouse.isDown = true;
                 trail = [];
                 const pos = getPos(e);
@@ -2232,11 +2351,8 @@
         window.addEventListener('mouseup', handleInputEnd);
         window.addEventListener('touchstart', handleInputStart, {passive: false});
         
-        // FIXED MOBILE SCROLLING ISSUE
-        // Don't prevent default behavior if interacting with overlays/rules
         window.addEventListener('touchmove', (e) => { 
             if (e.target.closest('.rules-wrapper') || e.target.closest('.overlay')) {
-                // Allow default scrolling behavior for UI elements
                 return;
             }
             e.preventDefault(); 
@@ -2249,12 +2365,11 @@
         function animate() {
             if (!gameActive) return;
             
-            // FPS Counter Logic
             const now = performance.now();
             const delta = now - lastTime;
             lastTime = now;
             fps = Math.round(1000 / delta);
-            if (frame % 30 === 0) { // Update text only every 30 frames to be readable
+            if (frame % 30 === 0) { 
                  fpsCounter.innerText = "FPS: " + fps;
             }
 
@@ -2276,7 +2391,6 @@
             if (gameTime < 10) timerDisplay.classList.add('timer-low');
             else timerDisplay.classList.remove('timer-low');
 
-            // Handle Timers
             if (freezeTimer > 0) {
                 freezeTimer--;
                 timeScale = 0.2; 
@@ -2296,23 +2410,21 @@
                 currentSpawnRate = 12;
             }
 
-            // --- ENTITY LIMIT LOGIC ---
-            // If performance mode is ON, cap at 16. Otherwise, allow up to 20.
-            const maxEntities = performanceMode ? 16 : 20;
+            // MOBILE OPTIMIZATION: Reduce Entity Cap
+            // Standard: 20 | Low Entity Mode: 16 | Mobile: 7 (was 12)
+            let maxEntities = lowEntityMode ? 16 : 20;
+            if (isMobile) maxEntities = 7; // REDUCED for slower mobile pace
 
             if (frame % Math.floor(currentSpawnRate) === 0) {
                 if (entities.length < maxEntities) { 
                     if (frenzyTimer > 0) {
                         entities.push(new Entity(true));
                     } else {
-                        // Check if we should spawn berries cluster (rare spawn check override)
                         if (Math.random() > 0.84 && Math.random() <= 0.86) {
-                            // Spawn 2-3 berries
                             entities.push(new Entity(false, false, 'berry'));
                             setTimeout(() => { if(entities.length < maxEntities) entities.push(new Entity(false, false, 'berry')); }, 100);
                             setTimeout(() => { if(entities.length < maxEntities) entities.push(new Entity(false, false, 'berry')); }, 200);
                         } else {
-                            // OPTIMIZATION: Reduced chance of spawning 3 items
                             const count = Math.random() > 0.8 ? 2 : 1;
                             
                             for(let i=0; i<count; i++) {
@@ -2326,7 +2438,6 @@
             }
 
             if (frame % 400 === 0 && Math.random() > 0.7) { 
-                 // Lower max special entities cap too
                  if(entities.length < maxEntities) entities.push(new Entity(false, true)); 
             }
 
@@ -2339,8 +2450,9 @@
                 if (s.life <= 0) splats.splice(i, 1);
             });
             
-            // LAG OPTIMIZATION: Clean up splats faster if too many
-            if (splats.length > 30) splats.shift(); // Was 50
+            // MOBILE OPTIMIZATION: Very aggressive cleanup
+            const splatLimit = isMobile ? 10 : 30;
+            if (splats.length > splatLimit) splats.shift(); 
 
             entities.forEach((e, i) => {
                 e.update();
@@ -2382,7 +2494,7 @@
                     }
                 }
 
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = isMobile ? 5 : 15; // Reduce blur on mobile
                 ctx.shadowColor = ctx.strokeStyle;
                 ctx.stroke();
                 ctx.shadowBlur = 0;
